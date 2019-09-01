@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import earthmap from './assets/earthmap.png';
+import earthmap from './assets/earthmap-high.jpg';
 
 
 class App extends Component {
@@ -76,7 +76,7 @@ class App extends Component {
 
     startAnimationLoop = () => {
         //this.cube.rotation.x += 0.01;
-        this.earth.rotation.y += 0.01;
+        this.earth.rotation.y += 0.005;
 
         this.renderer.render(this.scene, this.camera);
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
@@ -87,14 +87,15 @@ class App extends Component {
 
 
     addEarth() {
+        const textLoader = new THREE.TextureLoader();
+
         const geometry = new THREE.SphereGeometry(2, 100, 100);
-        //const geometry = new THREE.BoxGeometry(2, 2, 2);
         const material = new THREE.MeshPhongMaterial({
             //color: 0x156289,
             //emissive: 0x072534,
-            //side: THREE.DoubleSide,
-            //flatShading: false,
-            map: THREE.ImageUtils.loadTexture(earthmap)
+            side: THREE.DoubleSide,
+            flatShading: false,
+            map: textLoader.load(earthmap)
         });
 
 
@@ -106,8 +107,6 @@ class App extends Component {
     
 
     render() {
-        const p = this.props;
-
         return (
             <div>
                 <h1>Satellite tracker</h1>
