@@ -12,6 +12,7 @@
     "assets": "^3.0.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "satellite.js": "^3.0.1",
     "three": "^0.108.0"
   },
   "devDependencies": {
