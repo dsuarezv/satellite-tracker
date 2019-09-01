@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import earthmap from './assets/earthmap.png';
 
 
 class App extends Component {
@@ -70,28 +71,37 @@ class App extends Component {
     }
 
     addCustomSceneObjects = () => {
-        const geometry = new THREE.SphereGeometry(2, 100, 100);
-
-        //const geometry = new THREE.BoxGeometry(2, 2, 2);
-        const material = new THREE.MeshPhongMaterial({
-            color: 0x156289,
-            emissive: 0x072534,
-            side: THREE.DoubleSide,
-            flatShading: false
-        });
-
-        this.cube = new THREE.Mesh(geometry, material);
-
-        this.scene.add(this.cube);
+        this.addEarth();
     };
 
     startAnimationLoop = () => {
         //this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;
+        this.earth.rotation.y += 0.01;
 
         this.renderer.render(this.scene, this.camera);
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
+
+    
+    // __ Scene contents ______________________________________________________
+
+
+    addEarth() {
+        const geometry = new THREE.SphereGeometry(2, 100, 100);
+        //const geometry = new THREE.BoxGeometry(2, 2, 2);
+        const material = new THREE.MeshPhongMaterial({
+            //color: 0x156289,
+            //emissive: 0x072534,
+            //side: THREE.DoubleSide,
+            //flatShading: false,
+            map: THREE.ImageUtils.loadTexture(earthmap)
+        });
+
+
+        this.earth = new THREE.Mesh(geometry, material);
+        this.scene.add(this.earth);
+    }
+
 
     
 
