@@ -12,7 +12,7 @@ class App extends Component {
         this.setupScene();
         this.setupLights();
         this.addCustomSceneObjects();
-        this.startAnimationLoop();
+        this.animationLoop();
 
         window.addEventListener('resize', this.handleWindowResize);
     }
@@ -50,8 +50,8 @@ class App extends Component {
         this.controls = new OrbitControls(this.camera, this.el);
         // this.controls.enableZoom = false;
 
-        this.camera.position.x = 9000;
-        this.camera.position.z = 12000;
+        this.camera.position.x = 12000;
+    
         this.camera.lookAt(0, 0, 0);
 
         this.renderer = new THREE.WebGLRenderer({
@@ -64,27 +64,27 @@ class App extends Component {
         this.el.appendChild(this.renderer.domElement);
     };
 
+    animationLoop = () => {
+        this.animate();
+
+        this.renderer.render(this.scene, this.camera);
+        this.requestID = window.requestAnimationFrame(this.animationLoop);
+    };
+
     setupLights = () => {
         const sun = new THREE.PointLight(0xffffff, 1, 0);
-
         sun.position.set(149600000, 0, 0);
 
+        const ambient = new THREE.AmbientLight(0x404040);
+
         this.scene.add(sun);
+        this.scene.add(ambient);
     }
 
     addCustomSceneObjects = () => {
         this.addEarth();
         this.addSatellite();
-    };
-
-    startAnimationLoop = () => {
-        //this.earth.rotation.y += 0.005;
-
-        // this.sat.position.set(10, 10, 10);
-
-        this.renderer.render(this.scene, this.camera);
-        this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
-    };
+    };    
 
     
     // __ Scene contents ______________________________________________________
@@ -93,8 +93,10 @@ class App extends Component {
     addEarth = () => {
         const textLoader = new THREE.TextureLoader();
 
-        const geometry = new THREE.SphereGeometry(6371, 100, 100);
-        const material = new THREE.MeshPhongMaterial({
+
+        // Planet
+        let geometry = new THREE.SphereGeometry(6371, 100, 100);
+        let material = new THREE.MeshPhongMaterial({
             //color: 0x156289,
             //emissive: 0x072534,
             side: THREE.DoubleSide,
@@ -102,24 +104,39 @@ class App extends Component {
             map: textLoader.load(earthmap)
         });
 
+        const earth = new THREE.Mesh(geometry, material);
 
-        this.earth = new THREE.Mesh(geometry, material);
+
+        // Axis
+        material = new THREE.LineBasicMaterial({color: 0xffffff});
+        geometry = new THREE.Geometry();
+        geometry.vertices.push(
+            new THREE.Vector3( 0, -8000, 0 ),
+            new THREE.Vector3( 0, 8000, 0 )
+        );
+        
+        var earthRotationAxis = new THREE.Line( geometry, material );
+        
+
+        const group = new THREE.Group();
+        group.add(earth);
+        group.add(earthRotationAxis);
+
+        this.earth = group;
+        this.earth.rotation.x = -0.408407; // 23.4º ecliptic tilt angle
         this.scene.add(this.earth);
+
     }
 
     addSatellite = () => {
         const pos = this.getSatelliteFromTLE(
-            //'1 25544U 98067A   19156.50900463  .00003075  00000-0  59442-4 0  9992',
-            //'2 25544  51.6433  59.2583 0008217  16.4489 347.6017 15.51174618173442');
-            '1 00900U 64063C   19243.89377383  .00000175  00000-0  17807-3 0  9994',
-            '2 00900  90.1508  23.7470 0026835 205.5167 276.2128 13.73267207730575');
+            '1   900U 64063C   19244.53857318  .00000186  00000-0  19006-3 0  9992',
+            '2   900  90.1508  23.7571 0026918 203.5607 223.9641 13.73267467730663');
 
-        console.log(pos);
-
-        const geometry = new THREE.BoxBufferGeometry(100, 100, 100);
+        const geometry = new THREE.BoxBufferGeometry(50, 50, 50);
         const material = new THREE.MeshPhongMaterial({
-            color: 0x156289,
-            emissive: 0x072534,
+            color: 0xFF0000,
+            emissive: 0xFF4040,
             flatShading: false,
             side: THREE.DoubleSide,
         });
@@ -127,11 +144,12 @@ class App extends Component {
         
         this.sat = new THREE.Mesh(geometry, material);
         this.sat.position.set(pos.x, pos.y, pos.z);
-        this.scene.add(this.sat);
+        this.earth.add(this.sat);
     }
 
 
     // __ Satellite locations _________________________________________________
+
 
     getSatelliteFromTLE = (tleLine1, tleLine2) => {
 
@@ -167,7 +185,7 @@ class App extends Component {
         // lookAngles    = satellite.ecfToLookAngles(observerGd, positionEcf),
         // dopplerFactor = satellite.dopplerFactor(observerCoordsEcf, positionEcf, velocityEcf);
         
-        // var positionEcf   = eciToEcf(positionEci, gmst);
+        //var positionEcf   = eciToEcf(positionEci, gmst);
         // var positionGd = eciToGeodetic(positionEci, gmst);
         // console.log('eci', positionEci);
         // console.log('ecf', positionEcf);
@@ -196,7 +214,10 @@ class App extends Component {
         // latitudeStr  = satellite.degreesLat(latitude);
     }
 
-
+    animate = () => {
+        //this.earth.rotation.y += 0.005;
+        this.earth.rotation.y += 0.005;
+    }
     
 
     render() {
