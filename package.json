@@ -10,7 +10,8 @@
   "author": "David Suárez (github.com/dsuarezv)",
   "dependencies": {
     "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "react-dom": "^16.9.0",
+    "three": "^0.108.0"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.3"
