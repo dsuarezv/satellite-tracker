@@ -6,7 +6,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 class App extends Component {
 
     componentDidMount() {
-        this.sceneSetup();
+        this.setupScene();
+        this.setupLights();
         this.addCustomSceneObjects();
         this.startAnimationLoop();
 
@@ -19,50 +20,41 @@ class App extends Component {
         this.controls.dispose();
     }
 
-    sceneSetup = () => {
+    handleWindowResize = () => {
+        const width = this.el.clientWidth;
+        const height = this.el.clientHeight;
+
+        this.renderer.setSize(width, height);
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+    };
+
+
+    // __ Scene _______________________________________________________________
+
+
+    setupScene = () => {
         // get container dimensions and use them for scene sizing
         const width = this.el.clientWidth;
         const height = this.el.clientHeight;
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(
-            75, // fov = field of view
-            width / height, // aspect ratio
-            0.1, // near plane
-            1000 // far plane
-        );
 
-        this.camera = new THREE.PerspectiveCamera(
-            75, // fov = field of view
-            width / height, // aspect ratio
-            0.1, // near plane
-            1000 // far plane
-        );
+        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
 
         this.controls = new OrbitControls(this.camera, this.el);
-
-        // after that this.controls might be used for enabling/disabling zoom:
         // this.controls.enableZoom = false;
 
-        // set some distance from a cube that is located at z = 0
         this.camera.position.z = 5;
+        this.camera.position.y = 4;
+        this.camera.lookAt(0, 0, 0);
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(width, height);
-        this.el.appendChild(this.renderer.domElement); // mount using React ref
+        this.el.appendChild(this.renderer.domElement);
     };
 
-    addCustomSceneObjects = () => {
-        const geometry = new THREE.BoxGeometry(2, 2, 2);
-        const material = new THREE.MeshPhongMaterial({
-            color: 0x156289,
-            emissive: 0x072534,
-            side: THREE.DoubleSide,
-            flatShading: true
-        });
-        this.cube = new THREE.Mesh(geometry, material);
-        this.scene.add(this.cube);
-
+    setupLights = () => {
         const lights = [];
         lights[0] = new THREE.PointLight(0xffffff, 1, 0);
         lights[1] = new THREE.PointLight(0xffffff, 1, 0);
@@ -75,6 +67,22 @@ class App extends Component {
         this.scene.add(lights[0]);
         this.scene.add(lights[1]);
         this.scene.add(lights[2]);
+    }
+
+    addCustomSceneObjects = () => {
+        const geometry = new THREE.SphereGeometry(2, 100, 100);
+
+        //const geometry = new THREE.BoxGeometry(2, 2, 2);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x156289,
+            emissive: 0x072534,
+            side: THREE.DoubleSide,
+            flatShading: false
+        });
+
+        this.cube = new THREE.Mesh(geometry, material);
+
+        this.scene.add(this.cube);
     };
 
     startAnimationLoop = () => {
@@ -85,14 +93,7 @@ class App extends Component {
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
 
-    handleWindowResize = () => {
-        const width = this.el.clientWidth;
-        const height = this.el.clientHeight;
-
-        this.renderer.setSize(width, height);
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-    };
+    
 
     render() {
         const p = this.props;
