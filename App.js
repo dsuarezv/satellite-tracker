@@ -10,7 +10,7 @@ class App extends Component {
 
     componentDidMount() {
         this.setupScene();
-        this.setupLights();
+        this.setupLights();        
         this.addCustomSceneObjects();
         this.animationLoop();
 
@@ -37,22 +37,12 @@ class App extends Component {
 
 
     setupScene = () => {
-        // get container dimensions and use them for scene sizing
         const width = this.el.clientWidth;
         const height = this.el.clientHeight;
 
         this.scene = new THREE.Scene();
 
-        var NEAR = 1e-6, FAR = 1e27;
-
-        this.camera = new THREE.PerspectiveCamera(75, width / height, NEAR, FAR);
-
-        this.controls = new OrbitControls(this.camera, this.el);
-        // this.controls.enableZoom = false;
-
-        this.camera.position.x = 12000;
-    
-        this.camera.lookAt(0, 0, 0);
+        this.setupCamera(width, height);
 
         this.renderer = new THREE.WebGLRenderer({
             logarithmicDepthBuffer: true,
@@ -61,8 +51,19 @@ class App extends Component {
 
         this.renderer.setClearColor(new THREE.Color(0x333340));
         this.renderer.setSize(width, height);
+
         this.el.appendChild(this.renderer.domElement);
     };
+
+    setupCamera(width, height) {
+        var NEAR = 1e-6, FAR = 1e27;
+        this.camera = new THREE.PerspectiveCamera(75, width / height, NEAR, FAR);
+        this.controls = new OrbitControls(this.camera, this.el);
+        // this.controls.enableZoom = false;
+        this.camera.position.x = 12000;
+        this.camera.lookAt(0, 0, 0);
+    }
+
 
     animationLoop = () => {
         this.animate();
@@ -84,6 +85,7 @@ class App extends Component {
     addCustomSceneObjects = () => {
         this.addEarth();
         this.addSatellite();
+        this.addOrbit();
     };    
 
     
@@ -92,7 +94,6 @@ class App extends Component {
 
     addEarth = () => {
         const textLoader = new THREE.TextureLoader();
-
 
         // Planet
         let geometry = new THREE.SphereGeometry(6371, 100, 100);
@@ -105,14 +106,14 @@ class App extends Component {
         });
 
         const earth = new THREE.Mesh(geometry, material);
-
+        earth.rotation.y = -1.5;
 
         // Axis
         material = new THREE.LineBasicMaterial({color: 0xffffff});
         geometry = new THREE.Geometry();
         geometry.vertices.push(
-            new THREE.Vector3( 0, -8000, 0 ),
-            new THREE.Vector3( 0, 8000, 0 )
+            new THREE.Vector3( 0, -7000, 0 ),
+            new THREE.Vector3( 0, 7000, 0 )
         );
         
         var earthRotationAxis = new THREE.Line( geometry, material );
@@ -123,16 +124,12 @@ class App extends Component {
         group.add(earthRotationAxis);
 
         this.earth = group;
-        this.earth.rotation.x = -0.408407; // 23.4º ecliptic tilt angle
+        //this.earth.rotation.x = -0.408407; // 23.4º ecliptic tilt angle
         this.scene.add(this.earth);
 
     }
 
     addSatellite = () => {
-        const pos = this.getSatelliteFromTLE(
-            '1   900U 64063C   19244.53857318  .00000186  00000-0  19006-3 0  9992',
-            '2   900  90.1508  23.7571 0026918 203.5607 223.9641 13.73267467730663');
-
         const geometry = new THREE.BoxBufferGeometry(50, 50, 50);
         const material = new THREE.MeshPhongMaterial({
             color: 0xFF0000,
@@ -141,26 +138,64 @@ class App extends Component {
             side: THREE.DoubleSide,
         });
         
-        
         this.sat = new THREE.Mesh(geometry, material);
-        this.sat.position.set(pos.x, pos.y, pos.z);
         this.earth.add(this.sat);
+
+        this.updateSatPosition();
+    }
+
+    addOrbit = () => {
+        // For the next 24 hours, internvals of 30 minutes
+
+        const intervalMinutes = 1;
+        const totalMinutes = 109;
+        const initialDate = new Date();
+
+        var material = new THREE.LineBasicMaterial({color: 0xffffff});
+        var geometry = new THREE.Geometry();
+        
+        for (var i = 0; i <= totalMinutes; i += intervalMinutes) {
+            const date = new Date(initialDate.getTime() + i * 60000);
+
+            const pos = this.getSatelliteFromTLE(
+                '1 01512U 65065E   19244.01911296  .00000005  00000-0 -78601-5 0  9993',
+                '2 01512  89.8569 229.8205 0070369  17.2167  46.5280 13.33421601629380',
+                //'1   900U 64063C   19244.53857318  .00000186  00000-0  19006-3 0  9992',
+                //'2   900  90.1508  23.7571 0026918 203.5607 223.9641 13.73267467730663',
+                date);
+
+            geometry.vertices.push(new THREE.Vector3(pos.x, pos.z, pos.y));
+        }
+
+        var orbitCurve = new THREE.Line(geometry, material);
+        this.earth.add(orbitCurve);
+    }
+
+    updateSatPosition = () => {
+        const pos = this.getSatelliteFromTLE(
+            '1 01512U 65065E   19244.01911296  .00000005  00000-0 -78601-5 0  9993',
+            '2 01512  89.8569 229.8205 0070369  17.2167  46.5280 13.33421601629380'
+            // '1   900U 64063C   19244.53857318  .00000186  00000-0  19006-3 0  9992',
+            // '2   900  90.1508  23.7571 0026918 203.5607 223.9641 13.73267467730663'
+            );
+
+        this.sat.position.set(pos.x, pos.z, pos.y);
     }
 
 
     // __ Satellite locations _________________________________________________
 
 
-    getSatelliteFromTLE = (tleLine1, tleLine2) => {
+    getSatelliteFromTLE = (tle1, tle2, date) => {
 
         // Initialize a satellite record
-        var satrec = twoline2satrec(tleLine1, tleLine2);
+        var satrec = twoline2satrec(tle1, tle2);
 
         //  Propagate satellite using time since epoch (in minutes).
         //var positionAndVelocity = satellite.sgp4(satrec, timeSinceTleEpochMinutes);
 
         //  Or you can use a JavaScript Date
-        var date = new Date();
+        var date = date || new Date();
 
         var pv = propagate(satrec, date);
 
@@ -185,13 +220,13 @@ class App extends Component {
         // lookAngles    = satellite.ecfToLookAngles(observerGd, positionEcf),
         // dopplerFactor = satellite.dopplerFactor(observerCoordsEcf, positionEcf, velocityEcf);
         
-        //var positionEcf   = eciToEcf(positionEci, gmst);
+        var positionEcf   = eciToEcf(positionEci, gmst);
         // var positionGd = eciToGeodetic(positionEci, gmst);
         // console.log('eci', positionEci);
         // console.log('ecf', positionEcf);
         // console.log('gd', positionGd);
         
-        return positionEci;
+        return positionEcf;
 
         // // The coordinates are all stored in key-value pairs.
         // // ECI and ECF are accessed by `x`, `y`, `z` properties.
@@ -216,7 +251,7 @@ class App extends Component {
 
     animate = () => {
         //this.earth.rotation.y += 0.005;
-        this.earth.rotation.y += 0.005;
+        //this.updateSatPosition();
     }
     
 
@@ -224,7 +259,8 @@ class App extends Component {
         return (
             <div>
                 <h1>Satellite tracker</h1>
-                <div ref={c => this.el = c} style={{ width: '100%', height: '600px' }} />
+                <p>Single satellite</p>
+                <div ref={c => this.el = c} style={{ width: '100%', height: '900px' }} />
             </div>
         )
     }
