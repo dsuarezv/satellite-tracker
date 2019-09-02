@@ -76,7 +76,8 @@ class App extends Component {
 
     setupLights = () => {
         const sun = new THREE.PointLight(0xffffff, 1, 0);
-        sun.position.set(0, 0, -149600000);
+        //sun.position.set(0, 0, -149400000);
+        sun.position.set(0, 59333894, -137112541);
 
         const ambient = new THREE.AmbientLight(0x909090);
 
@@ -124,7 +125,6 @@ class App extends Component {
         // group.add(earthRotationAxis);
 
         this.earth = group;
-        this.earth.rotation.x = -0.408407; // 23.4º ecliptic tilt angle
         this.scene.add(this.earth);
 
     }
