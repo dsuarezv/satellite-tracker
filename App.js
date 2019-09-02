@@ -62,8 +62,8 @@ class App extends Component {
         this.camera = new THREE.PerspectiveCamera(75, width / height, NEAR, FAR);
         this.controls = new OrbitControls(this.camera, this.el);
         //this.controls.enableZoom = false;
-        this.camera.position.z = -15000;
-        //this.camera.position.x = 5000;
+        //this.camera.position.z = -15000;
+        this.camera.position.x = 12000;
         this.camera.lookAt(0, 0, 0);
     }
 
@@ -88,7 +88,7 @@ class App extends Component {
     addCustomSceneObjects = () => {
         this.addEarth();
         this.addSatellite();
-        //this.addOrbit();
+        this.addOrbit();
     };    
 
     
@@ -151,7 +151,7 @@ class App extends Component {
         // For the next 24 hours, internvals of 30 minutes
 
         const intervalMinutes = 1;
-        const totalMinutes = 109;
+        const totalMinutes = 92;
         const initialDate = new Date();
 
         var material = new THREE.LineBasicMaterial({color: 0x999999});
@@ -161,29 +161,22 @@ class App extends Component {
             const date = new Date(initialDate.getTime() + i * 60000);
 
             const pos = this.getPositionFromTLE(
-                '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',
+                '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',   // ISS
                 '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200',
                 date);
 
-            geometry.vertices.push(new THREE.Vector3(pos.x, pos.z, pos.y));
-        }
-
-        
+            geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
+        }        
 
         var orbitCurve = new THREE.Line(geometry, material);
         this.earth.add(orbitCurve);
     }
 
     updateSatPosition = () => {
-        // const pos = this.getPositionFromTLE(
-        //     '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',
-        //     '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200',
-        // );
-
-        //const  pos = this.LatLon2Xyz(EarthRadius, 40.4637, 3.7492);
-        //const  pos = this.LatLon2Xyz(EarthRadius, 43.023047, -9.411232);
-        //const  pos = this.LatLon2Xyz(EarthRadius, 22.872715, 121.402776);
-        const  pos = this.LatLon2Xyz(EarthRadius, 73.218874, 143.680546);
+        const pos = this.getPositionFromTLE(
+            '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',    // ISS
+            '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200',
+        );
 
         this.sat.position.set(pos.x, pos.y, pos.z);
     }
@@ -202,11 +195,6 @@ class App extends Component {
         const y = ((radius) * Math.cos(phi))
     
         return new THREE.Vector3(x, y, z);
-
-        // var vector = new THREE.Vector3();
-        // vector.setFromSpherical(spherical);
-
-        // return vector;
     }
 
     getPositionFromTLE = (tle1, tle2, date) => {
@@ -247,9 +235,12 @@ class App extends Component {
         var positionGd = satellite.eciToGeodetic(positionEci, gmst);
         // console.log('eci', positionEci);
         // console.log('ecf', positionEcf);
-        //console.log('gd', positionGd);
+        console.log('gd', positionGd);
         
-        return this.LatLon2Xyz(EarthRadius + positionGd.height, positionGd.latitude, positionGd.longitude);
+        const lat = THREE.Math.radToDeg(positionGd.latitude);
+        const lon = THREE.Math.radToDeg(positionGd.longitude);
+
+        return this.LatLon2Xyz(EarthRadius + positionGd.height, lat, lon);
 
 
         // // The coordinates are all stored in key-value pairs.
