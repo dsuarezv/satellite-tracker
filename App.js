@@ -7,6 +7,7 @@ import "./assets/theme.css";
 import active from "./assets/active.txt";
 
 const EarthRadius = 6371;
+const SatelliteSize = 50;
 
 let TargetDate = new Date();
 
@@ -57,7 +58,9 @@ class App extends Component {
 
         // Doesn't work because of CORS
         //this.loadLteFileStations('http://www.celestrak.com/NORAD/elements/active.txt');
-        this.loadLteFileStations(active);
+        
+        // Bypass CORS
+        this.loadLteFileStations('https://cors-anywhere.herokuapp.com/http://www.celestrak.com/NORAD/elements/active.txt');
 
         this.animationLoop();
 
@@ -198,7 +201,7 @@ class App extends Component {
     }
 
     addSatellite = (station, material) => {
-        const geometry = new THREE.BoxBufferGeometry(200, 200, 200);
+        const geometry = new THREE.BoxBufferGeometry(SatelliteSize, SatelliteSize, SatelliteSize);
         material = material || new THREE.MeshPhongMaterial({
             color: 0xFF0000,
             emissive: 0xFF4040,
