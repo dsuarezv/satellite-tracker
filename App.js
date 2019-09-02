@@ -15,7 +15,8 @@ const ISS = {
     name: 'International Space Station ZARYA (NORAD 25544)',
     category: 'B',
     lte1: '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',
-    lte2: '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200'
+    lte2: '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200',
+    orbitMinutes: 96
 }
 
 
@@ -36,7 +37,7 @@ function parseLteFile (fileContent) {
             current.lte2 = line;
         }
         else {
-            current = { name: line };
+            current = { name: line, orbitMinutes: 100 };
             result.push(current);
         }
     }
@@ -56,11 +57,10 @@ class App extends Component {
         this.setupLights();
         this.addCustomSceneObjects();
 
-        // Doesn't work because of CORS
-        //this.loadLteFileStations('http://www.celestrak.com/NORAD/elements/active.txt');
-        
         // Bypass CORS
         this.loadLteFileStations('https://cors-anywhere.herokuapp.com/http://www.celestrak.com/NORAD/elements/active.txt');
+
+        //this.addSatellite(ISS);
 
         this.animationLoop();
 
@@ -136,8 +136,7 @@ class App extends Component {
 
     addCustomSceneObjects = () => {
         this.addEarth();
-    };    
-
+    };
 
     loadLteFileStations = (url) => {
         fetch(url).then(res => {
@@ -214,18 +213,19 @@ class App extends Component {
 
         this.updateSatPosition(station);
 
-        //this.addOrbit(station);
+        this.addOrbit(station);
     }
 
     addOrbit = (station) => {
+        if (!station || !station.orbitMinutes) return;
+
         const intervalMinutes = 1;
-        const totalMinutes = 102;
         const initialDate = TargetDate;
 
-        var material = new THREE.LineBasicMaterial({color: 0x999999});
+        var material = new THREE.LineBasicMaterial({color: 0x999999, opacity: 0.5 });
         var geometry = new THREE.Geometry();
         
-        for (var i = 0; i <= totalMinutes; i += intervalMinutes) {
+        for (var i = 0; i <= station.orbitMinutes; i += intervalMinutes) {
             const date = new Date(initialDate.getTime() + i * 60000);
 
             const pos = this.getPositionFromTLE(station.lte1, station.lte2, date);
@@ -281,7 +281,7 @@ class App extends Component {
     }
 
     animate = () => {
-        //this.earth.rotation.y += 0.005;
+        this.earth.rotation.y += 0.005;
         //this.updateSatPosition();
     }
     
