@@ -7,7 +7,6 @@ import "./assets/theme.css";
 
 const EarthRadius = 6371;
 
-
 class App extends Component {
 
     componentDidMount() {
@@ -59,7 +58,7 @@ class App extends Component {
 
     setupCamera(width, height) {
         var NEAR = 1e-6, FAR = 1e27;
-        this.camera = new THREE.PerspectiveCamera(75, width / height, NEAR, FAR);
+        this.camera = new THREE.PerspectiveCamera(54, width / height, NEAR, FAR);
         this.controls = new OrbitControls(this.camera, this.el);
         //this.controls.enableZoom = false;
         this.camera.position.z = -15000;
@@ -98,8 +97,10 @@ class App extends Component {
     addEarth = () => {
         const textLoader = new THREE.TextureLoader();
 
+        const group = new THREE.Group();
+
         // Planet
-        let geometry = new THREE.SphereGeometry(EarthRadius, 100, 100);
+        let geometry = new THREE.SphereGeometry(EarthRadius, 50, 50);
         let material = new THREE.MeshPhongMaterial({
             //color: 0x156289,
             //emissive: 0x072534,
@@ -109,22 +110,18 @@ class App extends Component {
         });
 
         const earth = new THREE.Mesh(geometry, material);
-        earth.rotation.y = -1.5;
-
-        // Axis
-        material = new THREE.LineBasicMaterial({color: 0xffffff});
-        geometry = new THREE.Geometry();
-        geometry.vertices.push(
-            new THREE.Vector3( 0, -7000, 0 ),
-            new THREE.Vector3( 0, 7000, 0 )
-        );
-        
-        var earthRotationAxis = new THREE.Line( geometry, material );
-        
-
-        const group = new THREE.Group();
         group.add(earth);
-        group.add(earthRotationAxis);
+
+        // // Axis
+        // material = new THREE.LineBasicMaterial({color: 0xffffff});
+        // geometry = new THREE.Geometry();
+        // geometry.vertices.push(
+        //     new THREE.Vector3(0, -7000, 0),
+        //     new THREE.Vector3(0, 7000, 0)
+        // );
+        
+        // var earthRotationAxis = new THREE.Line(geometry, material);
+        // group.add(earthRotationAxis);
 
         this.earth = group;
         this.earth.rotation.x = -0.408407; // 23.4º ecliptic tilt angle
@@ -151,7 +148,7 @@ class App extends Component {
         // For the next 24 hours, internvals of 30 minutes
 
         const intervalMinutes = 1;
-        const totalMinutes = 1440;
+        const totalMinutes = 96;
         const initialDate = new Date();
 
         var material = new THREE.LineBasicMaterial({color: 0x999999});
@@ -185,10 +182,9 @@ class App extends Component {
     // __ Satellite locations _________________________________________________
 
 
-    LatLon2Xyz = (radius, lat, lon) => {
-
+    latLon2Xyz = (radius, lat, lon) => {
         var phi   = (90-lat)*(Math.PI/180)
-        var theta = (lon+94)*(Math.PI/180)
+        var theta = (lon+180)*(Math.PI/180)
     
         const x = -((radius) * Math.sin(phi)*Math.cos(theta))
         const z = ((radius) * Math.sin(phi)*Math.sin(theta))
@@ -199,69 +195,19 @@ class App extends Component {
 
     getPositionFromTLE = (tle1, tle2, date) => {
 
-        // Initialize a satellite record
-        var satrec = satellite.twoline2satrec(tle1, tle2);
+        const satrec = satellite.twoline2satrec(tle1, tle2);
+        date = date || new Date();
 
-        //  Propagate satellite using time since epoch (in minutes).
-        //var positionAndVelocity = satellite.sgp4(satrec, timeSinceTleEpochMinutes);
+        const positionVelocity = satellite.propagate(satrec, date);
 
-        //  Or you can use a JavaScript Date
-        var date = date || new Date();
-
-        var pv = satellite.propagate(satrec, date);
-
-        // The position_velocity result is a key-value pair of ECI coordinates.
-        // These are the base results from which all other coordinates are derived.
-        var positionEci = pv.position;
-        var velocityEci = pv.velocity;
-
-        // // Set the Observer at 122.03 West by 36.96 North, in RADIANS
-        // var observerGd = {
-        // longitude: satellite.degreesToRadians(-122.0308),
-        // latitude: satellite.degreesToRadians(36.9613422),
-        // height: 0.370
-        // };
-
-        // // You will need GMST for some of the coordinate transforms.
-        // // http://en.wikipedia.org/wiki/Sidereal_time#Definition
-        var gmst = satellite.gstime(date);
-
-        // // You can get ECF, Geodetic, Look Angles, and Doppler Factor.
-        // observerEcf   = satellite.geodeticToEcf(observerGd),
-        // lookAngles    = satellite.ecfToLookAngles(observerGd, positionEcf),
-        // dopplerFactor = satellite.dopplerFactor(observerCoordsEcf, positionEcf, velocityEcf);
-        
-        //var positionEcf   = satellite.eciToEcf(positionEci, gmst);
-        var positionGd = satellite.eciToGeodetic(positionEci, gmst);
-        // console.log('eci', positionEci);
-        // console.log('ecf', positionEcf);
-        console.log('gd', positionGd);
+        const positionEci = positionVelocity.position;
+        const gmst = satellite.gstime(date);
+        const positionGd = satellite.eciToGeodetic(positionEci, gmst);
         
         const lat = THREE.Math.radToDeg(positionGd.latitude);
         const lon = THREE.Math.radToDeg(positionGd.longitude);
 
-        return this.LatLon2Xyz(EarthRadius + positionGd.height, lat, lon);
-
-
-        // // The coordinates are all stored in key-value pairs.
-        // // ECI and ECF are accessed by `x`, `y`, `z` properties.
-        // var satelliteX = positionEci.x,
-        // satelliteY = positionEci.y,
-        // satelliteZ = positionEci.z;
-
-        // // Look Angles may be accessed by `azimuth`, `elevation`, `range_sat` properties.
-        // var azimuth   = lookAngles.azimuth,
-        // elevation = lookAngles.elevation,
-        // rangeSat  = lookAngles.rangeSat;
-
-        // // Geodetic coords are accessed via `longitude`, `latitude`, `height`.
-        // var longitude = positionGd.longitude,
-        // latitude  = positionGd.latitude,
-        // height    = positionGd.height;
-
-        // //  Convert the RADIANS to DEGREES for pretty printing (appends "N", "S", "E", "W", etc).
-        // var longitudeStr = satellite.degreesLong(longitude),
-        // latitudeStr  = satellite.degreesLat(latitude);
+        return this.latLon2Xyz(EarthRadius + positionGd.height, lat, lon);
     }
 
     animate = () => {
