@@ -62,8 +62,8 @@ class App extends Component {
         this.camera = new THREE.PerspectiveCamera(75, width / height, NEAR, FAR);
         this.controls = new OrbitControls(this.camera, this.el);
         //this.controls.enableZoom = false;
-        //this.camera.position.z = -15000;
-        this.camera.position.x = 12000;
+        this.camera.position.z = -15000;
+        this.camera.position.x = 15000;
         this.camera.lookAt(0, 0, 0);
     }
 
@@ -151,7 +151,7 @@ class App extends Component {
         // For the next 24 hours, internvals of 30 minutes
 
         const intervalMinutes = 1;
-        const totalMinutes = 92;
+        const totalMinutes = 1440;
         const initialDate = new Date();
 
         var material = new THREE.LineBasicMaterial({color: 0x999999});
@@ -275,7 +275,8 @@ class App extends Component {
             <div>
                 <div className='Info'>
                     <h1>Satellite tracker</h1>
-                    <p>Single satellite</p>
+                    <p>International Space Station (NORAD 25544)</p>
+                    <p>Showing 1 day prediction</p>
                 </div>
                 <div ref={c => this.el = c} style={{ width: '100%', height: '100%' }} />
             </div>
