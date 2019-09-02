@@ -14,3 +14,7 @@ Active objects from CELESTRAK (http://www.celestrak.com/NORAD/elements/active.tx
 Here predicted orbits for the next 90 minutes of all active objects: 
 
 ![active orbits](screenshots/03.png)
+
+Here debris from cosmos-2251 un red, active sats in blue, stations in yellow: 
+
+![debris](screenshots/04.png)

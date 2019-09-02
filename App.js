@@ -20,6 +20,12 @@ const ISS = {
 }
 
 
+function getCorsFreeUrl(url) {
+    // Bypass CORS
+    return 'https://cors-anywhere.herokuapp.com/' + url;
+}
+
+
 function parseLteFile (fileContent) {
     const result = [];
     const lines = fileContent.split("\n");
@@ -37,7 +43,10 @@ function parseLteFile (fileContent) {
             current.lte2 = line;
         }
         else {
-            current = { name: line, orbitMinutes: 100 };
+            current = { 
+                name: line, 
+                //orbitMinutes: 96
+            };
             result.push(current);
         }
     }
@@ -45,11 +54,21 @@ function parseLteFile (fileContent) {
     return result;
 }
 
+function getColorMaterial(color) {
+    return new THREE.MeshPhongMaterial({
+        color: color,
+        side: THREE.DoubleSide,
+    });
+}
+
+
+
 
 class App extends Component {
 
     state = {
-        selected: null
+        selected: null,
+        totalObjects: 0
     }
 
     componentDidMount() {
@@ -57,8 +76,8 @@ class App extends Component {
         this.setupLights();
         this.addCustomSceneObjects();
 
-        // Bypass CORS
-        this.loadLteFileStations('https://cors-anywhere.herokuapp.com/http://www.celestrak.com/NORAD/elements/active.txt');
+        
+        this.addCelestrakSets();
 
         //this.addSatellite(ISS);
 
@@ -138,27 +157,22 @@ class App extends Component {
         this.addEarth();
     };
 
-    loadLteFileStations = (url) => {
+    loadLteFileStations = (url, material) => {
         fetch(url).then(res => {
             res.text().then(text => {
-                this.addLteFileStations(text);
+                this.addLteFileStations(text, material);
             });
         });
     }
 
-    addLteFileStations = (fileContent) => {
+    addLteFileStations = (fileContent, material) => {
         const stations = parseLteFile(fileContent);
-
-        const material = new THREE.MeshPhongMaterial({
-            color: 0x00FF00,
-            emissive: 0xFF4040,
-            flatShading: false,
-            side: THREE.DoubleSide,
-        });
 
         stations.forEach(s => {
             this.addSatellite(s, material);
         });
+
+        this.setState({totalObjects: this.state.totalObjects + stations.length});
     }
 
 
@@ -284,10 +298,24 @@ class App extends Component {
         this.earth.rotation.y += 0.005;
         //this.updateSatPosition();
     }
+
+
+    addCelestrakSets() {
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/weather.txt'), getColorMaterial(0x00ffff));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/active.txt'), getColorMaterial(0x00ffff));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/science.txt'), getColorMaterial(0xffffff));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/stations.txt'), getColorMaterial(0xffff00));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/cosmos-2251-debris.txt'));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/iridium-NEXT.txt'), getColorMaterial(0x00ff00));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/gps-ops.txt'), getColorMaterial(0xffffff));
+        //this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/ses.txt'), getColorMaterial(0xffffff));
+        this.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/starlink.txt'), getColorMaterial(0xffffff));
+        
+    }
     
 
     render() {
-        const { selected } = this.state;
+        const { selected, totalObjects } = this.state;
 
         return (
             <div>
@@ -295,7 +323,7 @@ class App extends Component {
                     <h1>Satellite tracker</h1>
                     <p>{TargetDate.toString()}</p>
                     <p>{selected && selected.name}</p>
-                    <p>Showing 1 day prediction</p>
+                    <p>Total objects: {totalObjects}</p>
                 </div>
                 <div ref={c => this.el = c} style={{ width: '100%', height: '100%' }} />
             </div>
