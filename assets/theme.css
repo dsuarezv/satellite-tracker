@@ -1,5 +1,24 @@
+body, h1, h2, p, div, span, li, ul {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     background-color: #333340;
     color: white;
-    font-family: sans-serif;
+    font-family: Montserrat, sans-serif;
+    font-size: 12px;
+}
+
+h1 {
+    text-transform: uppercase;
+}
+
+
+.Info {
+    position: absolute;
+    top: 120px;
+    left: 50px;
+    width: 
 }
