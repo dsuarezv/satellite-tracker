@@ -4,6 +4,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import earthmap from './assets/earthmap-high.jpg';
 import * as satellite from 'satellite.js/lib/index';
 import "./assets/theme.css";
+import active from "./assets/active.txt";
 
 const EarthRadius = 6371;
 
@@ -46,7 +47,7 @@ function parseLteFile (fileContent) {
 class App extends Component {
 
     state = {
-        selected: ISS
+        selected: null
     }
 
     componentDidMount() {
@@ -54,20 +55,9 @@ class App extends Component {
         this.setupLights();
         this.addCustomSceneObjects();
 
-        this.addLteFileStations(`
-            ISS (ZARYA)
-            1 25544U 98067A   19245.37751584  .00005086  00000-0  95610-4 0  9995
-            2 25544  51.6456 338.3819 0007838 357.7936  82.3036 15.50423251187231
-            SWAS                    
-            1 25560U 98071A   19244.91605270  .00000082  00000-0  16284-4 0  9998
-            2 25560  69.8994  32.0710 0005902  37.6225 322.5343 14.93766324125789
-            GLOBALSTAR M023         
-            1 25621U 99004A   19244.91743841 -.00000120  00000-0 -90831-4 0  9995
-            2 25621  52.0131  13.5332 0010729 131.6589  20.9141 12.62379086948652
-            JCSAT-4A                
-            1 25630U 99006A   19244.93312921 -.00000226  00000-0  00000+0 0  9990
-            2 25630   3.9731  75.7694 0003126  68.2042 322.7520  1.00270705 75132`
-        );
+        // Doesn't work because of CORS
+        //this.loadLteFileStations('http://www.celestrak.com/NORAD/elements/active.txt');
+        this.loadLteFileStations(active);
 
         this.animationLoop();
 
@@ -145,6 +135,15 @@ class App extends Component {
         this.addEarth();
     };    
 
+
+    loadLteFileStations = (url) => {
+        fetch(url).then(res => {
+            res.text().then(text => {
+                this.addLteFileStations(text);
+            });
+        });
+    }
+
     addLteFileStations = (fileContent) => {
         const stations = parseLteFile(fileContent);
 
@@ -199,7 +198,7 @@ class App extends Component {
     }
 
     addSatellite = (station, material) => {
-        const geometry = new THREE.BoxBufferGeometry(50, 50, 50);
+        const geometry = new THREE.BoxBufferGeometry(200, 200, 200);
         material = material || new THREE.MeshPhongMaterial({
             color: 0xFF0000,
             emissive: 0xFF4040,
