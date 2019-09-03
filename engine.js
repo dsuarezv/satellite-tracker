@@ -8,34 +8,6 @@ const SatelliteSize = 50;
 
 let TargetDate = new Date();
 
-function parseLteFile (fileContent) {
-    const result = [];
-    const lines = fileContent.split("\n");
-    let current = null;
-
-    for (let i = 0; i < lines.length; ++i) {
-        const line = lines[i].trim();
-
-        if (line.length === 0) continue;
-
-        if (line[0] === '1') {
-            current.lte1 = line;
-        }
-        else if (line[0] === '2') {
-            current.lte2 = line;
-        }
-        else {
-            current = { 
-                name: line, 
-                //orbitMinutes: 10
-            };
-            result.push(current);
-        }
-    }
-
-    return result;
-}
-
 function getColorMaterial(color) {
     return new THREE.MeshPhongMaterial({
         color: color,
@@ -44,11 +16,19 @@ function getColorMaterial(color) {
 }
 
 
+const defaultOptions = {
+    backgroundColor: 0x333340
+}
 
+const defaultStationOptions = {
+    orbitMinutes: 0, 
+    satelliteSize: 50
+}
 
-export default class Engine {
-    initialize(container) {
+export class Engine {
+    initialize(container, options = {}) {
         this.el = container;
+        this.options = { ...defaultOptions, ...options };
 
         this._setupScene();
         this._setupLights();
@@ -74,6 +54,51 @@ export default class Engine {
         this.camera.updateProjectionMatrix();
     };
 
+
+    // __ API _________________________________________________________________
+
+
+    addSatellite = (station, material, size) => {
+        size = size || SatelliteSize;
+        const geometry = new THREE.BoxBufferGeometry(size, size, size);
+        material = material || new THREE.MeshPhongMaterial({
+            color: 0xFF0000,
+            emissive: 0xFF4040,
+            flatShading: false,
+            side: THREE.DoubleSide,
+        });
+        
+        const sat = new THREE.Mesh(geometry, material);
+        station._sat = sat;
+
+        this.updateSatellitePosition(station);
+
+        this._addOrbit(station);
+
+        this.earth.add(sat);
+    }
+
+    updateSatellitePosition = (station, date) => {
+        const pos = this.getPositionFromTLE(station.lte1, station.lte2, date);
+        if (!pos) return;
+
+        station._sat.position.set(pos.x, pos.y, pos.z);
+    }
+
+    
+    loadLteFileStations = (url, color, stationOptions) => {
+        const options = { ...defaultStationOptions, ...stationOptions };
+
+        return fetch(url).then(res => {
+            res.text().then(text => {
+                const material = color && getColorMaterial(color);
+                this._addLteFileStations(text, material, options);
+            });
+        });
+    }
+
+
+
     // __ Scene _______________________________________________________________
 
 
@@ -90,7 +115,7 @@ export default class Engine {
             antialias: true
         });
 
-        this.renderer.setClearColor(new THREE.Color(0x333340));
+        this.renderer.setClearColor(new THREE.Color(this.options.backgroundColor));
         this.renderer.setSize(width, height);
 
         this.el.appendChild(this.renderer.domElement);
@@ -105,14 +130,6 @@ export default class Engine {
         this.camera.position.x = 15000;
         this.camera.lookAt(0, 0, 0);
     }
-
-
-    _animationLoop = () => {
-        this._animate();
-
-        this.renderer.render(this.scene, this.camera);
-        this.requestID = window.requestAnimationFrame(this._animationLoop);
-    };
 
     _setupLights = () => {
         const sun = new THREE.PointLight(0xffffff, 1, 0);
@@ -129,25 +146,53 @@ export default class Engine {
         this._addEarth();
     };
 
-    loadLteFileStations = (url, color) => {
-        return fetch(url).then(res => {
-            res.text().then(text => {
-                const material = color && getColorMaterial(color);
-                this._addLteFileStations(text, material);
-            });
-        });
-    }
+    _animationLoop = () => {
+        this._animate();
 
-    _addLteFileStations = (fileContent, material) => {
-        const stations = parseLteFile(fileContent);
+        this.renderer.render(this.scene, this.camera);
+        this.requestID = window.requestAnimationFrame(this._animationLoop);
+    };
+
+    _addLteFileStations = (fileContent, material, stationOptions) => {
+        const stations = this._parseLteFile(fileContent, stationOptions);
+
+        const { satelliteSize } = stationOptions;
 
         stations.forEach(s => {
-            this.addSatellite(s, material);
+            this.addSatellite(s, material, satelliteSize);
         });
 
         // const newStations = [...this.state.stations];
         // newStations.push(stations);
         // this.setState({newStations});
+    }
+
+    _parseLteFile = (fileContent, stationOptions) => {
+        const result = [];
+        const lines = fileContent.split("\n");
+        let current = null;
+    
+        for (let i = 0; i < lines.length; ++i) {
+            const line = lines[i].trim();
+    
+            if (line.length === 0) continue;
+    
+            if (line[0] === '1') {
+                current.lte1 = line;
+            }
+            else if (line[0] === '2') {
+                current.lte2 = line;
+            }
+            else {
+                current = { 
+                    name: line, 
+                    ...stationOptions
+                };
+                result.push(current);
+            }
+        }
+    
+        return result;
     }
 
 
@@ -188,23 +233,6 @@ export default class Engine {
 
     }
 
-    addSatellite = (station, material) => {
-        const geometry = new THREE.BoxBufferGeometry(SatelliteSize, SatelliteSize, SatelliteSize);
-        material = material || new THREE.MeshPhongMaterial({
-            color: 0xFF0000,
-            emissive: 0xFF4040,
-            flatShading: false,
-            side: THREE.DoubleSide,
-        });
-        
-        this.sat = new THREE.Mesh(geometry, material);
-        this.earth.add(this.sat);
-
-        this.updateSatPosition(station);
-
-        this._addOrbit(station);
-    }
-
     _addOrbit = (station) => {
         if (!station || !station.orbitMinutes) return;
 
@@ -224,13 +252,6 @@ export default class Engine {
 
         var orbitCurve = new THREE.Line(geometry, material);
         this.earth.add(orbitCurve);
-    }
-
-    updateSatPosition = (station, date) => {
-        const pos = this.getPositionFromTLE(station.lte1, station.lte2, date);
-        if (!pos) return;
-
-        this.sat.position.set(pos.x, pos.y, pos.z);
     }
 
 
