@@ -1,27 +1,22 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import earthmap from './assets/earthmap-high.jpg';
-import * as satellite from 'satellite.js/lib/index';
+import circle from './assets/circle.png';
+import { parseLteFile, getPositionFromTLE } from "./lte";
+import { earthRadius } from "satellite.js/lib/constants";
 
-const EarthRadius = 6371;
+
 const SatelliteSize = 50;
 
 let TargetDate = new Date();
 
-function getColorMaterial(color) {
-    return new THREE.MeshPhongMaterial({
-        color: color,
-        side: THREE.DoubleSide,
-    });
-}
-
-
 const defaultOptions = {
-    backgroundColor: 0x333340
+    backgroundColor: 0x333340,
+    defaultSatelliteColor: 0xff0000
 }
 
 const defaultStationOptions = {
-    orbitMinutes: 0, 
+    orbitMinutes: 0,
     satelliteSize: 50
 }
 
@@ -67,11 +62,16 @@ export class Engine {
             flatShading: false,
             side: THREE.DoubleSide,
         });
-        
         const sat = new THREE.Mesh(geometry, material);
+
+        // material = material || this._getColorMaterial(this.options.defaultSatelliteColor)
+        // const sat = new THREE.Sprite(material);
+
         station._sat = sat;
 
         this.updateSatellitePosition(station);
+        // sat.position.normalize();
+        // sat.position.multiplyScalar(100);
 
         this._addOrbit(station);
 
@@ -79,7 +79,10 @@ export class Engine {
     }
 
     updateSatellitePosition = (station, date) => {
-        const pos = this.getPositionFromTLE(station.lte1, station.lte2, date);
+        
+        date = date || TargetDate;
+
+        const pos = getPositionFromTLE(station.lte1, station.lte2, date);
         if (!pos) return;
 
         station._sat.position.set(pos.x, pos.y, pos.z);
@@ -91,7 +94,7 @@ export class Engine {
 
         return fetch(url).then(res => {
             res.text().then(text => {
-                const material = color && getColorMaterial(color);
+                const material = color && this._getColorMaterial(color);
                 this._addLteFileStations(text, material, options);
             });
         });
@@ -144,6 +147,8 @@ export class Engine {
 
     _addBaseObjects = () => {
         this._addEarth();
+
+        this._satBmp = new THREE.TextureLoader().load(circle);
     };
 
     _animationLoop = () => {
@@ -153,46 +158,30 @@ export class Engine {
         this.requestID = window.requestAnimationFrame(this._animationLoop);
     };
 
+
+    _getColorMaterial = (color, bmp) => {
+        return new THREE.MeshPhongMaterial({
+            color: color,
+            side: THREE.DoubleSide,
+        });
+    
+        // return new THREE.SpriteMaterial({
+        //     map: bmp || this._satBmp, 
+        //     color: color, 
+        //     //sizeAttenuation: false
+        // });
+    }
+    
+
+
     _addLteFileStations = (fileContent, material, stationOptions) => {
-        const stations = this._parseLteFile(fileContent, stationOptions);
+        const stations = parseLteFile(fileContent, stationOptions);
 
         const { satelliteSize } = stationOptions;
 
         stations.forEach(s => {
             this.addSatellite(s, material, satelliteSize);
         });
-
-        // const newStations = [...this.state.stations];
-        // newStations.push(stations);
-        // this.setState({newStations});
-    }
-
-    _parseLteFile = (fileContent, stationOptions) => {
-        const result = [];
-        const lines = fileContent.split("\n");
-        let current = null;
-    
-        for (let i = 0; i < lines.length; ++i) {
-            const line = lines[i].trim();
-    
-            if (line.length === 0) continue;
-    
-            if (line[0] === '1') {
-                current.lte1 = line;
-            }
-            else if (line[0] === '2') {
-                current.lte2 = line;
-            }
-            else {
-                current = { 
-                    name: line, 
-                    ...stationOptions
-                };
-                result.push(current);
-            }
-        }
-    
-        return result;
     }
 
 
@@ -205,7 +194,7 @@ export class Engine {
         const group = new THREE.Group();
 
         // Planet
-        let geometry = new THREE.SphereGeometry(EarthRadius, 50, 50);
+        let geometry = new THREE.SphereGeometry(earthRadius, 50, 50);
         let material = new THREE.MeshPhongMaterial({
             //color: 0x156289,
             //emissive: 0x072534,
@@ -255,44 +244,10 @@ export class Engine {
     }
 
 
-    // __ Satellite locations _________________________________________________
-
-
-    _latLon2Xyz = (radius, lat, lon) => {
-        var phi   = (90-lat)*(Math.PI/180)
-        var theta = (lon+180)*(Math.PI/180)
     
-        const x = -((radius) * Math.sin(phi)*Math.cos(theta))
-        const z = ((radius) * Math.sin(phi)*Math.sin(theta))
-        const y = ((radius) * Math.cos(phi))
-    
-        return new THREE.Vector3(x, y, z);
-    }
-
-    getPositionFromTLE = (tle1, tle2, date) => {
-       
-        if (!tle1 || !tle2) {
-            return null;
-        }
-
-        const satrec = satellite.twoline2satrec(tle1, tle2);
-        date = date || TargetDate;
-
-        const positionVelocity = satellite.propagate(satrec, date);
-
-        const positionEci = positionVelocity.position;
-        const gmst = satellite.gstime(date);
-        const positionGd = satellite.eciToGeodetic(positionEci, gmst);
-        
-        const lat = THREE.Math.radToDeg(positionGd.latitude);
-        const lon = THREE.Math.radToDeg(positionGd.longitude);
-
-        return this._latLon2Xyz(EarthRadius + positionGd.height, lat, lon);
-    }
 
     _animate = () => {
-        this.earth.rotation.y += 0.005;
-        //this.updateSatPosition();
+        //this.earth.rotation.y += 0.005;
     }
 
 }
