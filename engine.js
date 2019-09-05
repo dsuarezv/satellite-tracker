@@ -12,7 +12,8 @@ let TargetDate = new Date();
 
 const defaultOptions = {
     backgroundColor: 0x333340,
-    defaultSatelliteColor: 0xff0000
+    defaultSatelliteColor: 0xff0000,
+    onStationClicked: null
 }
 
 const defaultStationOptions = {
@@ -21,8 +22,12 @@ const defaultStationOptions = {
 }
 
 export class Engine {
+
+    stations = [];
+
     initialize(container, options = {}) {
         this.el = container;
+        this.raycaster = new THREE.Raycaster();
         this.options = { ...defaultOptions, ...options };
 
         this._setupScene();
@@ -32,11 +37,17 @@ export class Engine {
         this._animationLoop();
 
         window.addEventListener('resize', this.handleWindowResize);
+        window.addEventListener('mousedown', this.handleMouseDown);
     }
 
     dispose() {
+        window.removeEventListener('mousedown', this.handleMouseDown);
         window.removeEventListener('resize', this.handleWindowResize);
         window.cancelAnimationFrame(this.requestID);
+        
+        this.raycaster = null;
+        this.el = null;
+
         this.controls.dispose();
     }
 
@@ -49,57 +60,147 @@ export class Engine {
         this.camera.updateProjectionMatrix();
     };
 
+    handleMouseDown = (e) => {
+        const mouse = new THREE.Vector2(
+            (e.clientX / window.innerWidth ) * 2 - 1,
+            -(e.clientY / window.innerHeight ) * 2 + 1 );
+
+	    this.raycaster.setFromCamera(mouse, this.camera);
+
+        let station = null;
+
+	    var intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        if (intersects && intersects.length > 0) {
+            const picked = intersects[0].object;
+            if (picked) {
+                station = this._findStationFromMesh(picked);
+                if (station) {
+                    if (station.orbit)
+                        this.removeOrbit(station);
+                    else
+                        this.addOrbit(station);
+                }
+            }
+        }
+
+        const cb = this.options.onStationClicked;
+        if (cb) cb(station);
+    }
+
 
     // __ API _________________________________________________________________
 
 
-    addSatellite = (station, material, size) => {
-        size = size || SatelliteSize;
-        const geometry = new THREE.BoxBufferGeometry(size, size, size);
-        material = material || new THREE.MeshPhongMaterial({
-            color: 0xFF0000,
-            emissive: 0xFF4040,
-            flatShading: false,
-            side: THREE.DoubleSide,
-        });
-        const sat = new THREE.Mesh(geometry, material);
+    addSatellite = (station, color, size) => {
+        
+        const sat = this.getSatelliteMesh(color, size);
+        const pos = this.getSatellitePositionFromLte(station);
+        if (pos) sat.position.set(pos.x, pos.y, pos.z);       
 
-        // material = material || this._getColorMaterial(this.options.defaultSatelliteColor)
-        // const sat = new THREE.Sprite(material);
+        station.mesh = sat;
 
-        station._sat = sat;
+        this.stations.push(station);
 
-        this.updateSatellitePosition(station);
-        // sat.position.normalize();
-        // sat.position.multiplyScalar(100);
-
-        this._addOrbit(station);
+        if (station.orbitMinutes > 0) this.addOrbit(station);
 
         this.earth.add(sat);
     }
 
-    updateSatellitePosition = (station, date) => {
+    getSatelliteMesh = (color, size) => {
+        color = color || this.options.defaultSatelliteColor;
+        size = size || SatelliteSize;
         
+        const geometry = new THREE.BoxBufferGeometry(size, size, size);
+        const material = new THREE.MeshPhongMaterial({
+            color: color,
+            emissive: 0xFF4040,
+            flatShading: false,
+            side: THREE.DoubleSide,
+        });
+
+        return new THREE.Mesh(geometry, material);
+    }
+
+    getSatelliteSprite = (color, size) => {
+        // material = material || this._getColorMaterial(this.options.defaultSatelliteColor)
+        // const sat = new THREE.Sprite(material);
+
+        // sat.position.normalize();
+        // sat.position.multiplyScalar(100);
+
+        //this._satelliteSprite = new THREE.TextureLoader().load(circle);
+
+        
+        // return new THREE.SpriteMaterial({
+        //     map: bmp || this._satBmp, 
+        //     color: color, 
+        //     //sizeAttenuation: false
+        // });
+    }
+
+
+    getSatellitePositionFromLte = (station, date) => {
+        date = date || TargetDate;
+        return getPositionFromTLE(station.lte1, station.lte2, date);
+    }
+
+    updateSatellitePosition = (station, date) => {
         date = date || TargetDate;
 
         const pos = getPositionFromTLE(station.lte1, station.lte2, date);
         if (!pos) return;
 
-        station._sat.position.set(pos.x, pos.y, pos.z);
+        station.mesh.position.set(pos.x, pos.y, pos.z);
     }
-
     
     loadLteFileStations = (url, color, stationOptions) => {
         const options = { ...defaultStationOptions, ...stationOptions };
 
         return fetch(url).then(res => {
             res.text().then(text => {
-                const material = color && this._getColorMaterial(color);
-                this._addLteFileStations(text, material, options);
+                this._addLteFileStations(text, color, options);
             });
         });
     }
 
+    addOrbit = (station) => {
+        const intervalMinutes = 1;
+        const minutes = station.orbitMinutes || 90;
+        const initialDate = TargetDate;
+
+        var material = new THREE.LineBasicMaterial({color: 0x999999, opacity: 1.0, transparent: true });
+        var geometry = new THREE.Geometry();
+        
+        for (var i = 0; i <= minutes; i += intervalMinutes) {
+            const date = new Date(initialDate.getTime() + i * 60000);
+
+            const pos = getPositionFromTLE(station.lte1, station.lte2, date);
+
+            geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
+        }        
+
+        var orbitCurve = new THREE.Line(geometry, material);
+        station.orbit = orbitCurve;
+
+        this.earth.add(orbitCurve);
+    }    
+
+    removeOrbit = (station) => {
+        if (!station || !station.orbit) return;
+
+        this.earth.remove(station.orbit);
+        station.orbit = null;
+    }
+
+    _addLteFileStations = (lteFileContent, color, stationOptions) => {
+        const stations = parseLteFile(lteFileContent, stationOptions);
+
+        const { satelliteSize } = stationOptions;
+
+        stations.forEach(s => {
+            this.addSatellite(s, color, satelliteSize);
+        });
+    }
 
 
     // __ Scene _______________________________________________________________
@@ -147,8 +248,6 @@ export class Engine {
 
     _addBaseObjects = () => {
         this._addEarth();
-
-        this._satBmp = new THREE.TextureLoader().load(circle);
     };
 
     _animationLoop = () => {
@@ -158,31 +257,6 @@ export class Engine {
         this.requestID = window.requestAnimationFrame(this._animationLoop);
     };
 
-
-    _getColorMaterial = (color, bmp) => {
-        return new THREE.MeshPhongMaterial({
-            color: color,
-            side: THREE.DoubleSide,
-        });
-    
-        // return new THREE.SpriteMaterial({
-        //     map: bmp || this._satBmp, 
-        //     color: color, 
-        //     //sizeAttenuation: false
-        // });
-    }
-    
-
-
-    _addLteFileStations = (fileContent, material, stationOptions) => {
-        const stations = parseLteFile(fileContent, stationOptions);
-
-        const { satelliteSize } = stationOptions;
-
-        stations.forEach(s => {
-            this.addSatellite(s, material, satelliteSize);
-        });
-    }
 
 
     // __ Scene contents ______________________________________________________
@@ -222,32 +296,18 @@ export class Engine {
 
     }
 
-    _addOrbit = (station) => {
-        if (!station || !station.orbitMinutes) return;
-
-        const intervalMinutes = 1;
-        const initialDate = TargetDate;
-
-        var material = new THREE.LineBasicMaterial({color: 0x999999, opacity: 0.5 });
-        var geometry = new THREE.Geometry();
-        
-        for (var i = 0; i <= station.orbitMinutes; i += intervalMinutes) {
-            const date = new Date(initialDate.getTime() + i * 60000);
-
-            const pos = this.getPositionFromTLE(station.lte1, station.lte2, date);
-
-            geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
-        }        
-
-        var orbitCurve = new THREE.Line(geometry, material);
-        this.earth.add(orbitCurve);
-    }
-
-
-    
-
     _animate = () => {
         //this.earth.rotation.y += 0.005;
     }
 
+
+    _findStationFromMesh = (threeObject) => {
+        for (var i = 0; i < this.stations.length; ++i) {
+            const s = this.stations[i];
+
+            if (s.mesh === threeObject) return s;
+        }
+
+        return null;
+    }
 }

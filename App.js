@@ -25,12 +25,18 @@ class App extends Component {
 
     componentDidMount() {
         this.engine = new Engine();
-        this.engine.initialize(this.el);
+        this.engine.initialize(this.el, {
+            onStationClicked: this.handleStationClicked
+        });
         this.addStations();
     }
 
     componentWillUnmount() {
         this.engine.dispose();
+    }
+
+    handleStationClicked = (station) => {
+        this.setState({selected: station});
     }
 
     addStations = () => {
