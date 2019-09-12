@@ -25,4 +25,6 @@ Installation
     $ npm install
     $ npm run dev
 
-That should start a [parcel](https://parceljs.org/) dev server and browse http://localhost:1234 to see it in action. In case parcel is not installed, follow instructions on their site. 
+That should start a [parcel](https://parceljs.org/) dev server. Browse to http://localhost:1234 to see it in action. In case parcel is not installed, follow instructions on their site. You should be able to run it with this command: 
+
+    $ parcel index.html
