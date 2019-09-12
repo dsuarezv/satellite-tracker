@@ -14,3 +14,13 @@ Active objects from CELESTRAK (http://www.celestrak.com/NORAD/elements/active.tx
 Here debris from cosmos-2251 in red, active sats in blue, stations in yellow: 
 
 ![debris](screenshots/04.png)
+
+Installation
+============
+
+    $ git clone https://github.com/dsuarezv/satellite-tracker
+    $ cd satellite-tracker
+    $ npm install
+    $ npm run dev
+
+That should start a [parcel](https://parceljs.org/) dev server and browse http://localhost:1234 to see it in action. In case parcel is not installed, follow instructions on their site. 
