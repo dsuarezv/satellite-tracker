@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "parcel index.html",
-    "build": "parcel build index.html"
+    "build": "parcel build index.html",
+    "publish": "parcel build index.html --public-url ./ --out-dir docs"
   },
   "author": "David Suárez (github.com/dsuarezv)",
   "dependencies": {
