@@ -7,6 +7,7 @@ import { earthRadius } from "satellite.js/lib/constants";
 
 
 const SatelliteSize = 50;
+const ixpdotp = 1440 / (2.0 * 3.141592654) ;
 
 let TargetDate = new Date();
 
@@ -94,7 +95,7 @@ export class Engine {
     addSatellite = (station, color, size) => {
         
         const sat = this._getSatelliteMesh(color, size);
-        const pos = this._getSatellitePositionFromLte(station);
+        const pos = this._getSatellitePositionFromTle(station);
         if (pos) sat.position.set(pos.x, pos.y, pos.z);       
 
         station.mesh = sat;
@@ -117,9 +118,14 @@ export class Engine {
     }
 
     addOrbit = (station) => {
+        if (station.orbitMinutes > 0) return;
+
+        const revsPerDay = station.satrec.no * ixpdotp;
         const intervalMinutes = 1;
-        const minutes = station.orbitMinutes || 90;
+        const minutes = station.orbitMinutes || 1440 / revsPerDay;
         const initialDate = TargetDate;
+
+        console.log('revsPerDay', revsPerDay, 'minutes', minutes);
 
         var material = new THREE.LineBasicMaterial({color: 0x999999, opacity: 1.0, transparent: true });
         var geometry = new THREE.Geometry();
@@ -127,7 +133,7 @@ export class Engine {
         for (var i = 0; i <= minutes; i += intervalMinutes) {
             const date = new Date(initialDate.getTime() + i * 60000);
 
-            const pos = getPositionFromTLE(station.lte1, station.lte2, date);
+            const pos = getPositionFromTLE(station, date);
 
             geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
         }        
@@ -190,15 +196,15 @@ export class Engine {
     }
 
 
-    _getSatellitePositionFromLte = (station, date) => {
+    _getSatellitePositionFromTle = (station, date) => {
         date = date || TargetDate;
-        return getPositionFromTLE(station.lte1, station.lte2, date);
+        return getPositionFromTLE(station, date);
     }
 
     updateSatellitePosition = (station, date) => {
         date = date || TargetDate;
 
-        const pos = getPositionFromTLE(station.lte1, station.lte2, date);
+        const pos = getPositionFromTLE(station, date);
         if (!pos) return;
 
         station.mesh.position.set(pos.x, pos.y, pos.z);

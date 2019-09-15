@@ -16,10 +16,10 @@ export const parseLteFile = (fileContent, stationOptions) => {
         if (line.length === 0) continue;
 
         if (line[0] === '1') {
-            current.lte1 = line;
+            current.tle1 = line;
         }
         else if (line[0] === '2') {
-            current.lte2 = line;
+            current.tle2 = line;
         }
         else {
             current = { 
@@ -48,11 +48,15 @@ export const latLon2Xyz = (radius, lat, lon) => {
     return { x, y, z };
 }
 
-export const getPositionFromTLE = (tle1, tle2, date) => {
+export const getPositionFromTLE = (station, date) => {
+   if (!station || !date) return null;
    
-    if (!tle1 || !tle2 || !date) return null;
+   const { tle1, tle2 } = station;
+    if (!tle1 || !tle2) return null;
 
     const satrec = satellite.twoline2satrec(tle1, tle2);
+
+    station.satrec = satrec;
 
     const positionVelocity = satellite.propagate(satrec, date);
 

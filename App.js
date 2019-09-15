@@ -8,8 +8,8 @@ import Search from './Search/Search';
 const ISS = {
     name: 'International Space Station ZARYA (NORAD 25544)',
     category: 'B',
-    lte1: '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',
-    lte2: '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200',
+    tle1: '1 25544U 98067A   19245.18443877  .00012516  00000-0  22337-3 0  9998',
+    tle2: '2 25544  51.6455 339.3385 0007918 357.2134  84.5192 15.50431138187200',
     orbitMinutes: 96
 }
 
@@ -70,7 +70,11 @@ class App extends Component {
     }
 
     handleSearchResultClick = (station) => {
-        
+        if (!station) return;
+
+        console.log(station);
+
+        this.engine.addOrbit(station);
     }
 
     render() {
