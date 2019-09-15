@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import "./assets/theme.css";
 import { Engine } from './engine';
+import Info from './Info';
+import Search from './Search/Search';
+
 
 const ISS = {
     name: 'International Space Station ZARYA (NORAD 25544)',
@@ -47,7 +50,10 @@ class App extends Component {
 
     addCelestrakSets = () => {
         //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/weather.txt'), 0x00ffff);
-        this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/active.txt'), 0xffffff);
+        this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/active.txt'), 0xffffff)
+            .then(stations => {
+                this.setState({stations});
+            });
         //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/science.txt'), 0xffff00);
         //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/stations.txt'), 0xffff00);
         //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/cosmos-2251-debris.txt'), 0xff0000);
@@ -63,16 +69,17 @@ class App extends Component {
         this.engine.loadLteFileStations(getCorsFreeUrl('https://www.amsat.org/tle/current/nasabare.txt'), 0xffff00);
     }
 
+    handleSearchResultClick = (station) => {
+        
+    }
+
     render() {
         const { selected, stations } = this.state;
 
         return (
             <div>
-                <div className='Info'>
-                    <h1>Satellite tracker</h1>
-                    <p>{selected && selected.name}</p>
-                    {stations.length > 0 && (<p>Total objects: {stations.length}</p>)}
-                </div>
+                <Info selected={selected} stations={stations} />
+                <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <div ref={c => this.el = c} style={{ width: '100%', height: '100%' }} />
             </div>
         )

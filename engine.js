@@ -93,8 +93,8 @@ export class Engine {
 
     addSatellite = (station, color, size) => {
         
-        const sat = this.getSatelliteMesh(color, size);
-        const pos = this.getSatellitePositionFromLte(station);
+        const sat = this._getSatelliteMesh(color, size);
+        const pos = this._getSatellitePositionFromLte(station);
         if (pos) sat.position.set(pos.x, pos.y, pos.z);       
 
         station.mesh = sat;
@@ -106,59 +106,12 @@ export class Engine {
         this.earth.add(sat);
     }
 
-    getSatelliteMesh = (color, size) => {
-        color = color || this.options.defaultSatelliteColor;
-        size = size || SatelliteSize;
-        
-        const geometry = new THREE.BoxBufferGeometry(size, size, size);
-        const material = new THREE.MeshPhongMaterial({
-            color: color,
-            emissive: 0xFF4040,
-            flatShading: false,
-            side: THREE.DoubleSide,
-        });
-
-        return new THREE.Mesh(geometry, material);
-    }
-
-    getSatelliteSprite = (color, size) => {
-        // material = material || this._getColorMaterial(this.options.defaultSatelliteColor)
-        // const sat = new THREE.Sprite(material);
-
-        // sat.position.normalize();
-        // sat.position.multiplyScalar(100);
-
-        //this._satelliteSprite = new THREE.TextureLoader().load(circle);
-
-        
-        // return new THREE.SpriteMaterial({
-        //     map: bmp || this._satBmp, 
-        //     color: color, 
-        //     //sizeAttenuation: false
-        // });
-    }
-
-
-    getSatellitePositionFromLte = (station, date) => {
-        date = date || TargetDate;
-        return getPositionFromTLE(station.lte1, station.lte2, date);
-    }
-
-    updateSatellitePosition = (station, date) => {
-        date = date || TargetDate;
-
-        const pos = getPositionFromTLE(station.lte1, station.lte2, date);
-        if (!pos) return;
-
-        station.mesh.position.set(pos.x, pos.y, pos.z);
-    }
-    
     loadLteFileStations = (url, color, stationOptions) => {
         const options = { ...defaultStationOptions, ...stationOptions };
 
         return fetch(url).then(res => {
-            res.text().then(text => {
-                this._addLteFileStations(text, color, options);
+            return res.text().then(text => {
+                return this._addLteFileStations(text, color, options);
             });
         });
     }
@@ -200,6 +153,55 @@ export class Engine {
         stations.forEach(s => {
             this.addSatellite(s, color, satelliteSize);
         });
+
+        return stations;
+    }
+
+    _getSatelliteMesh = (color, size) => {
+        color = color || this.options.defaultSatelliteColor;
+        size = size || SatelliteSize;
+        
+        const geometry = new THREE.BoxBufferGeometry(size, size, size);
+        const material = new THREE.MeshPhongMaterial({
+            color: color,
+            emissive: 0xFF4040,
+            flatShading: false,
+            side: THREE.DoubleSide,
+        });
+
+        return new THREE.Mesh(geometry, material);
+    }
+
+    _getSatelliteSprite = (color, size) => {
+        // material = material || this._getColorMaterial(this.options.defaultSatelliteColor)
+        // const sat = new THREE.Sprite(material);
+
+        // sat.position.normalize();
+        // sat.position.multiplyScalar(100);
+
+        //this._satelliteSprite = new THREE.TextureLoader().load(circle);
+
+        
+        // return new THREE.SpriteMaterial({
+        //     map: bmp || this._satBmp, 
+        //     color: color, 
+        //     //sizeAttenuation: false
+        // });
+    }
+
+
+    _getSatellitePositionFromLte = (station, date) => {
+        date = date || TargetDate;
+        return getPositionFromTLE(station.lte1, station.lte2, date);
+    }
+
+    updateSatellitePosition = (station, date) => {
+        date = date || TargetDate;
+
+        const pos = getPositionFromTLE(station.lte1, station.lte2, date);
+        if (!pos) return;
+
+        station.mesh.position.set(pos.x, pos.y, pos.z);
     }
 
 
