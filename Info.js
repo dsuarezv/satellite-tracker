@@ -8,8 +8,8 @@ class Info extends Component {
         return (
             <div className='Info'>
                 <h1>Satellite tracker</h1>
-                <p>{selected && selected.name}</p>
                 {stations && stations.length > 0 && (<p>Total objects: {stations.length}</p>)}
+                <p>{selected && selected.name}</p>
             </div>
         )
     }
