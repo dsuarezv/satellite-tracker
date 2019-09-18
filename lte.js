@@ -49,23 +49,33 @@ export const latLon2Xyz = (radius, lat, lon) => {
 }
 
 export const getPositionFromTLE = (station, date) => {
-   if (!station || !date) return null;
+    if (!station || !date) return null;
    
-   const { tle1, tle2 } = station;
-    if (!tle1 || !tle2) return null;
+    if (!station.satrec) {
+        const { tle1, tle2 } = station;
+        if (!tle1 || !tle2) return null;
+        const satrec = satellite.twoline2satrec(tle1, tle2);
+        station.satrec = satrec;
+    }
 
-    const satrec = satellite.twoline2satrec(tle1, tle2);
-
-    station.satrec = satrec;
-
-    const positionVelocity = satellite.propagate(satrec, date);
+    const positionVelocity = satellite.propagate(station.satrec, date);
 
     const positionEci = positionVelocity.position;
     const gmst = satellite.gstime(date);
     const positionGd = satellite.eciToGeodetic(positionEci, gmst);
     
-    const lat = rad2Deg * positionGd.latitude;
-    const lon = rad2Deg * positionGd.longitude;
+    var longitude = positionGd.longitude;
+    var latitude = positionGd.latitude;
+
+    while (longitude < -Math.PI) {
+        longitude += 2 * Math.PI;
+    }
+    while (longitude > Math.PI) {
+        longitude -= 2 * Math.PI;
+    }
+
+    const lat = rad2Deg * latitude;
+    const lon = rad2Deg * longitude;
 
     return latLon2Xyz(EarthRadius + positionGd.height, lat, lon);
 }

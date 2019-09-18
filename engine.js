@@ -96,6 +96,7 @@ export class Engine {
         
         const sat = this._getSatelliteMesh(color, size);
         const pos = this._getSatellitePositionFromTle(station);
+        //const pos = { x: Math.random() * 20000 - 10000, y: Math.random() * 20000 - 10000 , z: Math.random() * 20000 - 10000, }
         if (pos) sat.position.set(pos.x, pos.y, pos.z);       
 
         station.mesh = sat;
@@ -163,19 +164,24 @@ export class Engine {
         return stations;
     }
 
+
+
     _getSatelliteMesh = (color, size) => {
         color = color || this.options.defaultSatelliteColor;
         size = size || SatelliteSize;
-        
-        const geometry = new THREE.BoxBufferGeometry(size, size, size);
-        const material = new THREE.MeshPhongMaterial({
-            color: color,
-            emissive: 0xFF4040,
-            flatShading: false,
-            side: THREE.DoubleSide,
-        });
 
-        return new THREE.Mesh(geometry, material);
+        if (!this.geometry) {
+
+            this.geometry = new THREE.BoxBufferGeometry(size, size, size);
+            this.material = new THREE.MeshPhongMaterial({
+                color: color,
+                emissive: 0xFF4040,
+                flatShading: false,
+                side: THREE.DoubleSide,
+            });
+        }
+
+        return new THREE.Mesh(this.geometry, this.material);
     }
 
     _getSatelliteSprite = (color, size) => {
