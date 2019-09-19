@@ -5,7 +5,7 @@ Javascript 3D satellite tracker with up-to-date data from CELESTRAK. Uses [Three
 
 [Live DEMO](https://dsuarezv.github.io/satellite-tracker/)
 
-Here is a nice screenshot showing the predicted International Space Station orbit through a day. (Side note, [Why doesn't ISS pass over the polar regions?](https://space.stackexchange.com/questions/5297/why-doesnt-iss-pass-over-the-polar-regions))
+Here is a nice screenshot showing the predicted International Space Station orbit through a day. (Side note, [Why doesn't ISS pass over the polar regions?](https://space.stackexchange.com/questions/5297/why-doesnt-iss-pass-over-the-polar-regions)). The orbits are displayed in the ECEF (Earth Centered Earth Fixed) reference frame. 
 
 ![International Space Station](screenshots/01.png)
 
