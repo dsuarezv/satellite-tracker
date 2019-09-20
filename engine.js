@@ -240,6 +240,7 @@ export class Engine {
         this.camera = new THREE.PerspectiveCamera(54, width / height, NEAR, FAR);
         this.controls = new OrbitControls(this.camera, this.el);
         //this.controls.enableZoom = false;
+        this.controls.enablePan = false;
         this.camera.position.z = -15000;
         this.camera.position.x = 15000;
         this.camera.lookAt(0, 0, 0);
