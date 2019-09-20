@@ -61,3 +61,8 @@ h1 {
     float: right;
     cursor: pointer;
 }
+
+.SmallButton {
+    cursor: pointer;
+    font-size: 0.8em;
+}
