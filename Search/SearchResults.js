@@ -18,16 +18,19 @@ const SearchResults = ({stations, searchText, onResultClick}) => {
 
     return (
         <div className='ResultsWrapper'>
-            {results.map(result => <SearchResult key={result.name} result={result} onClick={onResultClick} />)}
+            {results.map((result, i) => <StationCard key={result.name + i} station={result} onClick={onResultClick} />)}
         </div>
     )
 }
 
 
-const SearchResult = ({result, onClick}) => {
+export const StationCard = ({station, onClick, onRemoveClick, className}) => {
     return (
-        <div className='Result' onClick={e => onClick(result)}>
-            <p>{result.name}</p>
+        <div className={'Result ' + (className || '')} onClick={e => onClick(station)}>
+            <p>
+                {station.name} 
+                {onRemoveClick && <span className='RemoveButton' onClick={e => onRemoveClick(station)}>x</span>}
+            </p>
         </div>
     )
 }

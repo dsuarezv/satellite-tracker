@@ -75,12 +75,6 @@ export class Engine {
             const picked = intersects[0].object;
             if (picked) {
                 station = this._findStationFromMesh(picked);
-                if (station) {
-                    if (station.orbit)
-                        this.removeOrbit(station);
-                    else
-                        this.addOrbit(station);
-                }
             }
         }
 
@@ -149,6 +143,8 @@ export class Engine {
         if (!station || !station.orbit) return;
 
         this.earth.remove(station.orbit);
+        station.orbit.geometry.dispose();
+        station.orbit.material.dispose();
         station.orbit = null;
     }
 

@@ -3,6 +3,7 @@ import "./assets/theme.css";
 import { Engine } from './engine';
 import Info from './Info';
 import Search from './Search/Search';
+import SelectedStations from './Selection/SelectedStations';
 
 
 const ISS = {
@@ -22,7 +23,7 @@ function getCorsFreeUrl(url) {
 class App extends Component {
 
     state = {
-        selected: null,
+        selected: [],
         stations: []
     }
 
@@ -39,7 +40,34 @@ class App extends Component {
     }
 
     handleStationClicked = (station) => {
-        this.setState({selected: station});
+        if (!station) return;
+
+        this.toggleSelection(station);
+    }
+
+    toggleSelection(station) {
+        if (this.isSelected(station))
+            this.deselectStation(station);
+        else
+            this.selectStation(station);
+    }
+
+    isSelected = (station) => {
+        return this.state.selected.includes(station);
+    }
+
+    selectStation = (station) => {
+        const newSelected = this.state.selected.concat(station);
+        this.setState({selected: newSelected});
+
+        this.engine.addOrbit(station);
+    }
+
+    deselectStation = (station) => {
+        const newSelected = this.state.selected.filter(s => s !== station);
+        this.setState( { selected: newSelected } );
+
+        this.engine.removeOrbit(station);
     }
 
     addStations = () => {
@@ -78,7 +106,18 @@ class App extends Component {
 
         console.log(station);
 
-        this.engine.addOrbit(station);
+        this.toggleSelection(station);
+    }
+
+    handleRemoveSelected = (station) => {
+        if (!station) return;
+        
+        this.deselectStation(station);
+    }
+
+    handleRemoveAllSelected = () => {
+        this.state.selected.forEach(s => this.engine.removeOrbit(s));
+        this.setState({selected: []});
     }
 
     render() {
@@ -86,8 +125,9 @@ class App extends Component {
 
         return (
             <div>
-                <Info selected={selected} stations={stations} />
+                <Info stations={stations} />
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
+                <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />
                 <div ref={c => this.el = c} style={{ width: '100%', height: '100%' }} />
             </div>
         )
