@@ -11,6 +11,10 @@ Here is a nice screenshot showing the predicted International Space Station orbi
 
 ![International Space Station](screenshots/01.png)
 
+Some random satellites selected: 
+
+![](screenshots/07.png)
+
 Some COSMOS satellites with orbits. Search and select interface:
 
 ![](screenshots/05.png)
