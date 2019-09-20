@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import earthmap from './assets/earthmap-high.jpg';
 import circle from './assets/circle.png';
-import { parseLteFile, getPositionFromTLE } from "./lte";
+import { parseLteFile, getPositionFromTLE } from "./tle";
 import { earthRadius } from "satellite.js/lib/constants";
 
 
