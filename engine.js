@@ -88,7 +88,8 @@ export class Engine {
 
     addSatellite = (station, color, size) => {
         
-        const sat = this._getSatelliteMesh(color, size);
+        //const sat = this._getSatelliteMesh(color, size);
+        const sat = this._getSatelliteSprite(color, size);
         const pos = this._getSatellitePositionFromTle(station);
         //const pos = { x: Math.random() * 20000 - 10000, y: Math.random() * 20000 - 10000 , z: Math.random() * 20000 - 10000, }
         if (pos) sat.position.set(pos.x, pos.y, pos.z);       
@@ -181,20 +182,21 @@ export class Engine {
     }
 
     _getSatelliteSprite = (color, size) => {
-        // material = material || this._getColorMaterial(this.options.defaultSatelliteColor)
-        // const sat = new THREE.Sprite(material);
-
-        // sat.position.normalize();
-        // sat.position.multiplyScalar(100);
-
-        //this._satelliteSprite = new THREE.TextureLoader().load(circle);
-
         
-        // return new THREE.SpriteMaterial({
-        //     map: bmp || this._satBmp, 
-        //     color: color, 
-        //     //sizeAttenuation: false
-        // });
+        const SpriteScaleFactor = 5000;
+
+        if (!this.material) {
+            this._satelliteSprite = new THREE.TextureLoader().load(circle);
+            this.material = new THREE.SpriteMaterial({
+                map: this._satelliteSprite, 
+                color: color, 
+                sizeAttenuation: false
+            });            
+        }
+
+        const result = new THREE.Sprite(this.material);
+        result.scale.set(size / SpriteScaleFactor, size / SpriteScaleFactor, 1);
+        return result;
     }
 
 
