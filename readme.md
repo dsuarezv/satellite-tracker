@@ -19,6 +19,11 @@ Some COSMOS satellites with orbits. Search and select interface:
 
 ![](screenshots/05.png)
 
+Beidou satellites orbits in ECI reference frame:
+
+![](screenshots/10.png)
+
+
 Active objects from CELESTRAK (http://www.celestrak.com/NORAD/elements/active.txt)
 
 ![Active satellites](screenshots/02.png)
