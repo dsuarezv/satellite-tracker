@@ -121,7 +121,7 @@ export class Engine {
         const revsPerDay = station.satrec.no * ixpdotp;
         const intervalMinutes = 1;
         const minutes = station.orbitMinutes || 1440 / revsPerDay;
-        const initialDate = TargetDate;
+        const initialDate = new Date();
 
         console.log('revsPerDay', revsPerDay, 'minutes', minutes);
 
@@ -283,7 +283,7 @@ export class Engine {
 
     render = () => {
         this.renderer.render(this.scene, this.camera);
-        //this.requestID = window.requestAnimationFrame(this._animationLoop);
+        //this.requestID = window.requestAnimationFrame(this._animationLoop); 
     };
 
 
