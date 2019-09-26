@@ -65,13 +65,13 @@ const getSolution = (station, date) => {
 
 
 // type: 1 ECEF coordinates   2: ECI coordinates
-export const getPositionFromTLE = (station, date, type = 2) => {
+export const getPositionFromTLE = (station, date, type = 1) => {
     if (!station || !date) return null;
 
     const positionVelocity = getSolution(station, date);
 
     const positionEci = positionVelocity.position;
-    if (type === 1) return toThree(positionEci);
+    if (type === 2) return toThree(positionEci);
 
     const gmst = satellite.gstime(date);
 

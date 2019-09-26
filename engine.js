@@ -214,6 +214,15 @@ export class Engine {
         station.mesh.position.set(pos.x, pos.y, pos.z);
     }
 
+    
+    updateAllPositions = (date) => {
+        if (!this.stations) return;
+
+        this.stations.forEach(station => {
+            this.updateSatellitePosition(station, date);
+        })
+    }
+
 
     // __ Scene _______________________________________________________________
 

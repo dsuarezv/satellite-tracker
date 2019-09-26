@@ -33,6 +33,8 @@ class App extends Component {
             onStationClicked: this.handleStationClicked
         });
         this.addStations();
+
+        setInterval(this.handleTimer, 1000);
     }
 
     componentWillUnmount() {
@@ -96,6 +98,10 @@ class App extends Component {
 
     addAmsatSets = () => {
         this.engine.loadLteFileStations(getCorsFreeUrl('https://www.amsat.org/tle/current/nasabare.txt'), 0xffff00);
+    }
+
+    handleTimer = () => {
+        this.engine.updateAllPositions(new Date());
     }
 
     handleSearchResultClick = (station) => {
