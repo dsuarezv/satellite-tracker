@@ -26,7 +26,7 @@ const SearchResults = ({stations, searchText, onResultClick}) => {
 
 export const StationCard = ({station, onClick, onRemoveClick, className}) => {
     return (
-        <div className={'Result ' + (className || '')} onClick={e => onClick(station)}>
+        <div className={'Result ' + (className || '')} onClick={e => onClick && onClick(station)}>
             <p>
                 {station.name} 
                 {onRemoveClick && <span className='RemoveButton' onClick={e => onRemoveClick(station)}>x</span>}
