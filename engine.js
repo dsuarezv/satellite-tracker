@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import earthmap from './assets/earthmap-high.jpg';
 import circle from './assets/circle.png';
-import { parseLteFile, getPositionFromTLE } from "./tle";
+import { parseTleFile as parseTleFile, getPositionFromTle } from "./tle";
 import { earthRadius } from "satellite.js/lib/constants";
 
 
@@ -35,7 +35,7 @@ export class Engine {
         this._setupLights();
         this._addBaseObjects();
 
-        this._animationLoop();
+        this.render();
 
         window.addEventListener('resize', this.handleWindowResize);
         window.addEventListener('mousedown', this.handleMouseDown);
@@ -44,7 +44,7 @@ export class Engine {
     dispose() {
         window.removeEventListener('mousedown', this.handleMouseDown);
         window.removeEventListener('resize', this.handleWindowResize);
-        window.cancelAnimationFrame(this.requestID);
+        //window.cancelAnimationFrame(this.requestID);
         
         this.raycaster = null;
         this.el = null;
@@ -59,6 +59,8 @@ export class Engine {
         this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
+
+        this.render();
     };
 
     handleMouseDown = (e) => {
@@ -108,7 +110,7 @@ export class Engine {
 
         return fetch(url).then(res => {
             return res.text().then(text => {
-                return this._addLteFileStations(text, color, options);
+                return this._addTleFileStations(text, color, options);
             });
         });
     }
@@ -129,7 +131,7 @@ export class Engine {
         for (var i = 0; i <= minutes; i += intervalMinutes) {
             const date = new Date(initialDate.getTime() + i * 60000);
 
-            const pos = getPositionFromTLE(station, date);
+            const pos = getPositionFromTle(station, date);
 
             geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
         }        
@@ -138,6 +140,7 @@ export class Engine {
         station.orbit = orbitCurve;
 
         this.earth.add(orbitCurve);
+        this.render();
     }    
 
     removeOrbit = (station) => {
@@ -147,16 +150,19 @@ export class Engine {
         station.orbit.geometry.dispose();
         station.orbit.material.dispose();
         station.orbit = null;
+        this.render();
     }
 
-    _addLteFileStations = (lteFileContent, color, stationOptions) => {
-        const stations = parseLteFile(lteFileContent, stationOptions);
+    _addTleFileStations = (lteFileContent, color, stationOptions) => {
+        const stations = parseTleFile(lteFileContent, stationOptions);
 
         const { satelliteSize } = stationOptions;
 
         stations.forEach(s => {
             this.addSatellite(s, color, satelliteSize);
         });
+
+        this.render();
 
         return stations;
     }
@@ -186,7 +192,7 @@ export class Engine {
         const SpriteScaleFactor = 5000;
 
         if (!this.material) {
-            this._satelliteSprite = new THREE.TextureLoader().load(circle);
+            this._satelliteSprite = new THREE.TextureLoader().load(circle, this.render);
             this.material = new THREE.SpriteMaterial({
                 map: this._satelliteSprite, 
                 color: color, 
@@ -202,13 +208,13 @@ export class Engine {
 
     _getSatellitePositionFromTle = (station, date) => {
         date = date || TargetDate;
-        return getPositionFromTLE(station, date);
+        return getPositionFromTle(station, date);
     }
 
     updateSatellitePosition = (station, date) => {
         date = date || TargetDate;
 
-        const pos = getPositionFromTLE(station, date);
+        const pos = getPositionFromTle(station, date);
         if (!pos) return;
 
         station.mesh.position.set(pos.x, pos.y, pos.z);
@@ -220,7 +226,9 @@ export class Engine {
 
         this.stations.forEach(station => {
             this.updateSatellitePosition(station, date);
-        })
+        });
+
+        this.render();
     }
 
 
@@ -252,6 +260,7 @@ export class Engine {
         this.controls = new OrbitControls(this.camera, this.el);
         //this.controls.enableZoom = false;
         this.controls.enablePan = false;
+        this.controls.addEventListener('change', () => this.render());
         this.camera.position.z = -15000;
         this.camera.position.x = 15000;
         this.camera.lookAt(0, 0, 0);
@@ -272,11 +281,9 @@ export class Engine {
         this._addEarth();
     };
 
-    _animationLoop = () => {
-        this._animate();
-
+    render = () => {
         this.renderer.render(this.scene, this.camera);
-        this.requestID = window.requestAnimationFrame(this._animationLoop);
+        //this.requestID = window.requestAnimationFrame(this._animationLoop);
     };
 
 
@@ -296,7 +303,7 @@ export class Engine {
             //emissive: 0x072534,
             side: THREE.DoubleSide,
             flatShading: false,
-            map: textLoader.load(earthmap)
+            map: textLoader.load(earthmap, this.render)
         });
 
         const earth = new THREE.Mesh(geometry, material);
@@ -317,11 +324,6 @@ export class Engine {
         this.scene.add(this.earth);
 
     }
-
-    _animate = () => {
-        //this.earth.rotation.y += 0.005;
-    }
-
 
     _findStationFromMesh = (threeObject) => {
         for (var i = 0; i < this.stations.length; ++i) {

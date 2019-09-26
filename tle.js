@@ -5,7 +5,7 @@ export const EarthRadius = 6371;
 
 const rad2Deg = 180 / 3.141592654;
 
-export const parseLteFile = (fileContent, stationOptions) => {
+export const parseTleFile = (fileContent, stationOptions) => {
     const result = [];
     const lines = fileContent.split("\n");
     let current = null;
@@ -65,7 +65,7 @@ const getSolution = (station, date) => {
 
 
 // type: 1 ECEF coordinates   2: ECI coordinates
-export const getPositionFromTLE = (station, date, type = 1) => {
+export const getPositionFromTle = (station, date, type = 1) => {
     if (!station || !date) return null;
 
     const positionVelocity = getSolution(station, date);
