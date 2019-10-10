@@ -125,7 +125,10 @@ export class Engine {
 
         console.log('revsPerDay', revsPerDay, 'minutes', minutes);
 
-        var material = new THREE.LineBasicMaterial({color: 0x999999, opacity: 1.0, transparent: true });
+        if (!this.orbitMaterial) {
+            this.orbitMaterial = new THREE.LineBasicMaterial({color: 0x999999, opacity: 1.0, transparent: true });
+        }
+
         var geometry = new THREE.Geometry();
         
         for (var i = 0; i <= minutes; i += intervalMinutes) {
@@ -136,20 +139,21 @@ export class Engine {
             geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
         }        
 
-        var orbitCurve = new THREE.Line(geometry, material);
+        var orbitCurve = new THREE.Line(geometry, this.orbitMaterial);
         station.orbit = orbitCurve;
+        station.mesh.material = this.selectedMaterial;
 
         this.earth.add(orbitCurve);
         this.render();
-    }    
+    }
 
     removeOrbit = (station) => {
         if (!station || !station.orbit) return;
 
         this.earth.remove(station.orbit);
         station.orbit.geometry.dispose();
-        station.orbit.material.dispose();
         station.orbit = null;
+        station.mesh.material = this.material;
         this.render();
     }
 
@@ -193,6 +197,11 @@ export class Engine {
 
         if (!this.material) {
             this._satelliteSprite = new THREE.TextureLoader().load(circle, this.render);
+            this.selectedMaterial = new THREE.SpriteMaterial({
+                map: this._satelliteSprite, 
+                color: 0xFF0000,
+                sizeAttenuation: false
+            });
             this.material = new THREE.SpriteMaterial({
                 map: this._satelliteSprite, 
                 color: color, 

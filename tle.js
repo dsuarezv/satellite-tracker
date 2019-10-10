@@ -37,7 +37,7 @@ export const parseTleFile = (fileContent, stationOptions) => {
 // __ Satellite locations _________________________________________________
 
 
-export const latLon2Xyz = (radius, lat, lon) => {
+const latLon2Xyz = (radius, lat, lon) => {
     var phi   = (90-lat)*(Math.PI/180)
     var theta = (lon+180)*(Math.PI/180)
 
