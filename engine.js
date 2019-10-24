@@ -53,8 +53,8 @@ export class Engine {
     }
 
     handleWindowResize = () => {
-        const width = this.el.clientWidth;
-        const height = this.el.clientHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
         this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
