@@ -38,7 +38,7 @@ Installation
     $ git clone https://github.com/dsuarezv/satellite-tracker
     $ cd satellite-tracker
     $ npm install
-    $ npm run dev
+    $ npm start
 
 That should start a [parcel](https://parceljs.org/) dev server. Browse to http://localhost:1234 to see it in action. In case parcel is not installed, follow instructions on their site. You should be able to run it with this command: 
 
