@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 const MaxSearchResults = 20;
 
@@ -25,10 +25,13 @@ const SearchResults = ({stations, searchText, onResultClick}) => {
 
 
 export const StationCard = ({station, onClick, onRemoveClick, className}) => {
+
+    const noradId = station.satrec && station.satrec.satnum;
+    
     return (
         <div className={'Result ' + (className || '')} onClick={e => onClick && onClick(station)}>
             <p>
-                {station.name} 
+                <span title={noradId ? 'NORAD ID: ' + noradId : null}>{station.name}</span>
                 {onRemoveClick && <span className='RemoveButton' onClick={e => onRemoveClick(station)}>x</span>}
             </p>
         </div>

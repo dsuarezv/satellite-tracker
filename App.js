@@ -4,7 +4,8 @@ import { Engine } from './engine';
 import Info from './Info';
 import Search from './Search/Search';
 import SelectedStations from './Selection/SelectedStations';
-
+import Fork from './fork';
+import * as qs from 'query-string';
 
 // Bypass CORS
 function getCorsFreeUrl(url) {
@@ -31,6 +32,26 @@ class App extends Component {
 
     componentWillUnmount() {
         this.engine.dispose();
+    }
+
+    processQuery = (stations) => {
+        const q = window.location.search;
+        if (!q) return;
+
+        const params = qs.parse(q);
+        if (!params.ss) return;
+
+        const selectedIds = params.ss.split(',');
+        if (!selectedIds || selectedIds.length === 0) return;
+
+        selectedIds.forEach(id => {
+            const station = this.findStationById(stations, id);
+            if (station) this.selectStation(station);
+        });
+    }
+
+    findStationById = (stations, id) => {
+        return stations.find(st => st.satrec && st.satrec.satnum == id);
     }
 
     handleStationClicked = (station) => {
@@ -84,6 +105,7 @@ class App extends Component {
         //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/glo-ops.txt'), 0xff0000, { orbitMinutes: 500, satelliteSize: 500 })
             .then(stations => {
                 this.setState({stations});
+                this.processQuery(stations);
             });
 
     }
@@ -98,8 +120,6 @@ class App extends Component {
 
     handleSearchResultClick = (station) => {
         if (!station) return;
-
-        console.log(station);
 
         this.toggleSelection(station);
     }
@@ -120,6 +140,7 @@ class App extends Component {
 
         return (
             <div>
+                <Fork />
                 <Info stations={stations} />
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />

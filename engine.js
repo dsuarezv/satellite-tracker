@@ -124,7 +124,7 @@ export class Engine {
         const minutes = station.orbitMinutes || 1440 / revsPerDay;
         const initialDate = new Date();
 
-        console.log('revsPerDay', revsPerDay, 'minutes', minutes);
+        //console.log('revsPerDay', revsPerDay, 'minutes', minutes);
 
         if (!this.orbitMaterial) {
             this.orbitMaterial = new THREE.LineBasicMaterial({color: 0x999999, opacity: 1.0, transparent: true });
