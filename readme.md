@@ -5,7 +5,7 @@ Javascript 3D satellite tracker with up-to-date data from CELESTRAK. Uses [Three
 
 It is meant as a simple 3D engine that can be used to draw your own satellite orbits. Out of the box it can filter and highlight satellites by name or clicking directly on them, but you can extend / reuse it by looking at the App.js file and loading the satellite set you prefer or changing how orbits are displayed.  
 
-[Live DEMO](https://dsuarezv.github.io/satellite-tracker/)
+[Live DEMO](https://dsuarezv.github.io/satellite-tracker?ss=25544)
 
 Here is a nice screenshot showing the predicted International Space Station orbit through a day. (Side note, [Why doesn't ISS pass over the polar regions?](https://space.stackexchange.com/questions/5297/why-doesnt-iss-pass-over-the-polar-regions)). The orbits are displayed in the ECEF (Earth Centered Earth Fixed) reference frame. 
 
