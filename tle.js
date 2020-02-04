@@ -75,6 +75,8 @@ export const getPositionFromTle = (station, date, type = 1) => {
 
     const gmst = satellite.gstime(date);
 
+    if (!positionEci) return null;  // Ignore 
+
     const positionEcf = satellite.eciToEcf(positionEci, gmst);
     return toThree(positionEcf);
 }

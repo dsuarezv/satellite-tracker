@@ -93,9 +93,10 @@ export class Engine {
         //const sat = this._getSatelliteMesh(color, size);
         const sat = this._getSatelliteSprite(color, size);
         const pos = this._getSatellitePositionFromTle(station);
+        if (!pos) return;
         //const pos = { x: Math.random() * 20000 - 10000, y: Math.random() * 20000 - 10000 , z: Math.random() * 20000 - 10000, }
-        if (pos) sat.position.set(pos.x, pos.y, pos.z);       
 
+        sat.position.set(pos.x, pos.y, pos.z);
         station.mesh = sat;
 
         this.stations.push(station);
@@ -135,6 +136,7 @@ export class Engine {
             const date = new Date(initialDate.getTime() + i * 60000);
 
             const pos = getPositionFromTle(station, date);
+            if (!pos) continue;
 
             geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
         }        
