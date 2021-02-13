@@ -9,7 +9,7 @@ import * as qs from 'query-string';
 
 // Bypass CORS
 function getCorsFreeUrl(url) {
-    return 'https://cors-anywhere.herokuapp.com/' + url;
+    return 'https://api.allorigins.win/raw?url=' + url;    
 }
 
 
