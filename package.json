@@ -12,19 +12,19 @@
   "dependencies": {
     "assets": "^3.0.1",
     "query-string": "6.10.1",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "react-github-fork-ribbon": "0.6.0",
     "react-router": "5.1.2",
     "satellite.js": "^3.0.1",
     "three": "^0.108.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.8.4",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/preset-react": "^7.8.3",
-    "@types/react": "^16.9.19",
+    "@babel/cli": "^7.12.16",
+    "@babel/core": "^7.12.16",
+    "@babel/plugin-proposal-class-properties": "^7.12.13",
+    "@babel/preset-react": "^7.12.13",
+    "@types/react": "^16.14.4",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "parcel-bundler": "^1.12.4"
   }
