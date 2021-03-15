@@ -19,7 +19,8 @@ class App extends Component {
     state = {
         selected: [],
         stations: [], 
-        query: null
+        query: null,
+        queryObjectCount: 0
     }
 
     componentDidMount() {
@@ -56,7 +57,7 @@ class App extends Component {
             const query = params.highlight;
             const matches = this.queryStationsByName(stations, query);
             matches.forEach(st => this.engine.highlightStation(st));
-            this.setState({...this.state, query });
+            this.setState({...this.state, query, queryObjectCount: matches.length });
         }
     }
 
@@ -156,7 +157,7 @@ class App extends Component {
         return (
             <div>
                 <Fork />
-                <Highlights query={this.state.query} />
+                <Highlights query={this.state.query} total={this.state.queryObjectCount} />
                 <Info stations={stations} />
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />
