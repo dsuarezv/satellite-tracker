@@ -6,6 +6,7 @@ import Search from './Search/Search';
 import SelectedStations from './Selection/SelectedStations';
 import Fork from './fork';
 import * as qs from 'query-string';
+import Highlights from './highlights';
 
 // Bypass CORS
 function getCorsFreeUrl(url) {
@@ -17,7 +18,8 @@ class App extends Component {
 
     state = {
         selected: [],
-        stations: []
+        stations: [], 
+        query: null
     }
 
     componentDidMount() {
@@ -39,15 +41,28 @@ class App extends Component {
         if (!q) return;
 
         const params = qs.parse(q);
-        if (!params.ss) return;
 
-        const selectedIds = params.ss.split(',');
-        if (!selectedIds || selectedIds.length === 0) return;
+        if (params.ss) {
+            const selectedIds = params.ss.split(',');
+            if (!selectedIds || selectedIds.length === 0) return;
 
-        selectedIds.forEach(id => {
-            const station = this.findStationById(stations, id);
-            if (station) this.selectStation(station);
-        });
+            selectedIds.forEach(id => {
+                const station = this.findStationById(stations, id);
+                if (station) this.selectStation(station);
+            });
+        }
+
+        if (params.highlight) {
+            const query = params.highlight;
+            const matches = this.queryStationsByName(stations, query);
+            matches.forEach(st => this.engine.highlightStation(st));
+            this.setState({...this.state, query });
+        }
+    }
+
+    queryStationsByName = (stations, query) => {
+        query = query.toLowerCase();
+        return stations.filter(st => st.name.toLowerCase().indexOf(query) > -1)
     }
 
     findStationById = (stations, id) => {
@@ -141,6 +156,7 @@ class App extends Component {
         return (
             <div>
                 <Fork />
+                <Highlights query={this.state.query} />
                 <Info stations={stations} />
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />

@@ -47,6 +47,10 @@ h1 {
     font-size: 0.8em;
 }
 
+.Highlights {
+    text-align: center;
+}
+
 
 @media only screen and (max-width: 999px) {
     .Info {
@@ -68,6 +72,15 @@ h1 {
         top: 40px;
         width: 120px;
     }
+
+    .Highlights {
+        position: absolute;
+        bottom: 10px;
+        width: 100%;
+    }
+
+    .Hint { font-size: 0.9em;}
+    .Highlight { font-size: 3em;}
 }
 
 @media screen and (min-width: 1000px) {
@@ -91,4 +104,13 @@ h1 {
         top: 180px;
         width: 200px;
     }
+    
+    .Highlights {
+        position: absolute;
+        top: 10px;
+        width: 100%;
+    }
+
+    .Hint { font-size: 0.9em;}
+    .Highlight { font-size: 3em;}
 }

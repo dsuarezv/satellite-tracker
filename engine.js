@@ -163,6 +163,14 @@ export class Engine {
         this.render();
     }
 
+    highlightStation = (station) => {
+        station.mesh.material = this.highlightedMaterial;
+    }
+
+    clearStationHighlight = (station) => {
+        station.mesh.material = this.material;
+    }
+
     _addTleFileStations = (lteFileContent, color, stationOptions) => {
         const stations = parseTleFile(lteFileContent, stationOptions);
 
@@ -197,29 +205,36 @@ export class Engine {
         return new THREE.Mesh(this.geometry, this.material);
     }
 
-    _getSatelliteSprite = (color, size) => {
+    _setupSpriteMaterials = (color) => {
+        if (this.material) return;
         
+        this._satelliteSprite = new THREE.TextureLoader().load(circle, this.render);
+        this.selectedMaterial = new THREE.SpriteMaterial({
+            map: this._satelliteSprite, 
+            color: 0xFF0000,
+            sizeAttenuation: false
+        });
+        this.highlightedMaterial = new THREE.SpriteMaterial({
+            map: this._satelliteSprite,
+            color: 0xfca300,
+            sizeAttenuation: false
+        });            
+        this.material = new THREE.SpriteMaterial({
+            map: this._satelliteSprite, 
+            color: color, 
+            sizeAttenuation: false
+        });            
+    }
+
+    _getSatelliteSprite = (color, size) => {
         const SpriteScaleFactor = 5000;
 
-        if (!this.material) {
-            this._satelliteSprite = new THREE.TextureLoader().load(circle, this.render);
-            this.selectedMaterial = new THREE.SpriteMaterial({
-                map: this._satelliteSprite, 
-                color: 0xFF0000,
-                sizeAttenuation: false
-            });
-            this.material = new THREE.SpriteMaterial({
-                map: this._satelliteSprite, 
-                color: color, 
-                sizeAttenuation: false
-            });            
-        }
+        this._setupSpriteMaterials(color);
 
         const result = new THREE.Sprite(this.material);
         result.scale.set(size / SpriteScaleFactor, size / SpriteScaleFactor, 1);
         return result;
     }
-
 
     _getSatellitePositionFromTle = (station, date) => {
         date = date || TargetDate;
