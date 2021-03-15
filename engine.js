@@ -38,11 +38,11 @@ export class Engine {
         this.render();
 
         window.addEventListener('resize', this.handleWindowResize);
-        window.addEventListener('mousedown', this.handleMouseDown);
+        window.addEventListener('pointerdown', this.handleMouseDown);
     }
 
     dispose() {
-        window.removeEventListener('mousedown', this.handleMouseDown);
+        window.removeEventListener('pointerdown', this.handleMouseDown);
         window.removeEventListener('resize', this.handleWindowResize);
         //window.cancelAnimationFrame(this.requestID);
         
@@ -133,7 +133,7 @@ export class Engine {
             this.orbitMaterial = new THREE.LineBasicMaterial({color: 0x999999, opacity: 1.0, transparent: true });
         }
 
-        var geometry = new THREE.Geometry();
+        var points = [];
         
         for (var i = 0; i <= minutes; i += intervalMinutes) {
             const date = new Date(initialDate.getTime() + i * 60000);
@@ -141,9 +141,10 @@ export class Engine {
             const pos = getPositionFromTle(station, date);
             if (!pos) continue;
 
-            geometry.vertices.push(new THREE.Vector3(pos.x, pos.y, pos.z));
-        }        
+            points.push(new THREE.Vector3(pos.x, pos.y, pos.z));
+        }
 
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
         var orbitCurve = new THREE.Line(geometry, this.orbitMaterial);
         station.orbit = orbitCurve;
         station.mesh.material = this.selectedMaterial;
@@ -272,7 +273,6 @@ export class Engine {
         var NEAR = 1e-6, FAR = 1e27;
         this.camera = new THREE.PerspectiveCamera(54, width / height, NEAR, FAR);
         this.controls = new OrbitControls(this.camera, this.el);
-        //this.controls.enableZoom = false;
         this.controls.enablePan = false;
         this.controls.addEventListener('change', () => this.render());
         this.camera.position.z = -15000;
