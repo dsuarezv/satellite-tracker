@@ -13,6 +13,10 @@ Here is a nice screenshot showing the predicted International Space Station orbi
 
 ![International Space Station](screenshots/01.png)
 
+StarLink satellites highlighted in orange, some of them displaying orbits:
+
+![](screenshots/11.png)
+
 Some random satellites selected: 
 
 ![](screenshots/07.png)
