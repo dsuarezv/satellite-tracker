@@ -1,0 +1,16 @@
+.DateSliderWrapper {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+}
+
+.DateSlider {
+    width: 100%;
+}
+
+.DateSliderWrapper .Value {
+    display: block;
+    margin-right: 40px;
+    margin-bottom: 10px;
+}

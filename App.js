@@ -7,12 +7,18 @@ import SelectedStations from './Selection/SelectedStations';
 import Fork from './fork';
 import * as qs from 'query-string';
 import Highlights from './highlights';
+import DateSlider from './Options/DateSlider';
+
+// Some config
+const UseDateSlider = false;
+const DateSliderRangeInMilliseconds = 92 * 60 * 1000;  // 92 minutes
+
+
 
 // Bypass CORS
 function getCorsFreeUrl(url) {
     return 'https://api.allorigins.win/raw?url=' + url;    
 }
-
 
 class App extends Component {
 
@@ -20,7 +26,9 @@ class App extends Component {
         selected: [],
         stations: [], 
         query: null,
-        queryObjectCount: 0
+        queryObjectCount: 0,
+        initialDate: new Date().getTime(),
+        currentDate: new Date().getTime()
     }
 
     componentDidMount() {
@@ -131,6 +139,9 @@ class App extends Component {
     }
 
     handleTimer = () => {
+        // By default, update in realtime every second, unless dateSlider is displayed.
+        if (UseDateSlider) return;
+
         this.engine.updateAllPositions(new Date());
     }
 
@@ -151,8 +162,24 @@ class App extends Component {
         this.setState({selected: []});
     }
 
+    handleDateChange = (v) => {
+        this.setState({ currentDate: v.target.value });
+
+        const date = new Date();
+        date.setTime(this.state.currentDate);
+        this.engine.updateAllPositions(date);
+    }
+
+    renderDate = (v) => {
+        const result = new Date();
+        result.setTime(v);
+        return result.toString();
+    }
+
     render() {
-        const { selected, stations } = this.state;
+        const { selected, stations, initialDate, currentDate } = this.state;
+
+        const maxMs = initialDate + DateSliderRangeInMilliseconds;
 
         return (
             <div>
@@ -161,10 +188,13 @@ class App extends Component {
                 <Info stations={stations} />
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />
+                {UseDateSlider && <DateSlider min={initialDate} max={maxMs} value={currentDate} onChange={this.handleDateChange} onRender={this.renderDate} />}
                 <div ref={c => this.el = c} style={{ width: '100%', height: '100%' }} />
             </div>
         )
     }
 }
+
+
 
 export default App;
