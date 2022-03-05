@@ -12,7 +12,7 @@ const ixpdotp = 1440 / (2.0 * 3.141592654) ;
 let TargetDate = new Date();
 
 const defaultOptions = {
-    backgroundColor: 0x333340,
+    backgroundColor: 0x041119,
     defaultSatelliteColor: 0xff0000,
     onStationClicked: null
 }

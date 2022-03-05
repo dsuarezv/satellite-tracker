@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MaxSearchResults = 20;
+const MaxSearchResults = 160;
 
 const filterResults = (stations, searchText) => {
     if (!stations) return null;

@@ -5,7 +5,7 @@ body, h1, h2, p, div, span, li, ul {
 }
 
 body {
-    background-color: #333340;
+    background-color: #041119;
     color: white;
     font-family: Montserrat, sans-serif;
     font-size: 12px;
@@ -29,11 +29,17 @@ h1 {
 }
 
 .Result {
-    margin: 5px 0;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    background-color: rgba(255, 255, 255, 0.1);
+    margin: 3px 6px 3px 0;
+    border: 1px solid rgba(102, 113, 136, 0.39);
+    border-left: 3px solid #ffbfa3;
+    background-color: rgba(48, 67, 104, 0.5);
     border-top-right-radius: 10px;
     padding: 4px 10px;
+    width: 150px;
+    
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 
@@ -81,6 +87,12 @@ h1 {
 
     .Hint { font-size: 0.9em;}
     .Highlight { font-size: 3em;}
+
+    .ResultsWrapper {
+        max-height: 80vh;
+        overflow: hidden;
+        width: 150px;
+    }
 }
 
 @media screen and (min-width: 1000px) {
@@ -113,4 +125,15 @@ h1 {
 
     .Hint { font-size: 0.9em;}
     .Highlight { font-size: 3em;}
+       
+    .ResultsWrapper {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+        height: 70vh;
+        max-width: 80vw;
+    }
 }
