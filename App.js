@@ -10,7 +10,7 @@ import Highlights from './highlights';
 import DateSlider from './Options/DateSlider';
 
 // Some config
-const UseDateSlider = true;
+const UseDateSlider = false;
 const DateSliderRangeInMilliseconds = 24 * 60 * 60 * 1000;  // 24 hours
 
 // Bypass CORS
