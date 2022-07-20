@@ -10,10 +10,8 @@ import Highlights from './highlights';
 import DateSlider from './Options/DateSlider';
 
 // Some config
-const UseDateSlider = false;
-const DateSliderRangeInMilliseconds = 92 * 60 * 1000;  // 92 minutes
-
-
+const UseDateSlider = true;
+const DateSliderRangeInMilliseconds = 24 * 60 * 60 * 1000;  // 24 hours
 
 // Bypass CORS
 function getCorsFreeUrl(url) {
@@ -28,15 +26,19 @@ class App extends Component {
         query: null,
         queryObjectCount: 0,
         initialDate: new Date().getTime(),
-        currentDate: new Date().getTime()
+        currentDate: new Date().getTime(), 
+        referenceFrame: UseDateSlider ? 2 : 1
     }
 
     componentDidMount() {
         this.engine = new Engine();
+        this.engine.referenceFrame = this.state.referenceFrame;
         this.engine.initialize(this.el, {
             onStationClicked: this.handleStationClicked
         });
         this.addStations();
+
+        this.engine.updateAllPositions(new Date())
 
         setInterval(this.handleTimer, 1000);
     }
@@ -116,17 +118,17 @@ class App extends Component {
     }
 
     addCelestrakSets = () => {
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/weather.txt'), 0x00ffff)
-        this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/active.txt'), 0xffffff)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/science.txt'), 0xffff00)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/stations.txt'), 0xffff00)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/cosmos-2251-debris.txt'), 0xff0000)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/iridium-NEXT.txt'), 0x00ff00)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/gps-ops.txt'), 0x00ff00)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/ses.txt'), 0xffffff)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/starlink.txt'), 0xffffff)
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/gps-ops.txt'), 0xffffff, { orbitMinutes: 0, satelliteSize: 200 })
-        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.com/NORAD/elements/glo-ops.txt'), 0xff0000, { orbitMinutes: 500, satelliteSize: 500 })
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/weather.txt'), 0x00ffff)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/cosmos-2251-debris.txt'), 0xff0090)
+        this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/active.txt'), 0xffffff)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/science.txt'), 0xffff00)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/stations.txt'), 0xffff00)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/iridium-NEXT.txt'), 0x00ff00)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/gps-ops.txt'), 0x00ff00)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/ses.txt'), 0xffffff)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/starlink.txt'), 0x0000ff)
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/gps-ops.txt'), 0xffffff, { orbitMinutes: 0, satelliteSize: 200 })
+        //this.engine.loadLteFileStations(getCorsFreeUrl('http://www.celestrak.org/NORAD/elements/glo-ops.txt'), 0xff0000, { orbitMinutes: 500, satelliteSize: 500 })
             .then(stations => {
                 this.setState({stations});
                 this.processQuery(stations);
@@ -140,9 +142,7 @@ class App extends Component {
 
     handleTimer = () => {
         // By default, update in realtime every second, unless dateSlider is displayed.
-        if (UseDateSlider) return;
-
-        this.engine.updateAllPositions(new Date());
+        if (!UseDateSlider) this.handleDateChange(null, new Date());
     }
 
     handleSearchResultClick = (station) => {
@@ -162,11 +162,22 @@ class App extends Component {
         this.setState({selected: []});
     }
 
-    handleDateChange = (v) => {
-        this.setState({ currentDate: v.target.value });
+    handleReferenceFrameChange = () => {
+        this.state.selected.forEach(s => this.engine.removeOrbit(s));
+
+        const newType = this.state.referenceFrame === 1 ? 2 : 1;
+        this.setState({referenceFrame: newType});
+        this.engine.setReferenceFrame(newType);
+
+        this.state.selected.forEach(s => this.engine.addOrbit(s));
+    }
+
+    handleDateChange = (v, d) => {
+        const newDate = v ? v.target.value : d;
+        this.setState({ currentDate: newDate });
 
         const date = new Date();
-        date.setTime(this.state.currentDate);
+        date.setTime(newDate);
         this.engine.updateAllPositions(date);
     }
 
@@ -185,7 +196,7 @@ class App extends Component {
             <div>
                 <Fork />
                 <Highlights query={this.state.query} total={this.state.queryObjectCount} />
-                <Info stations={stations} />
+                <Info stations={stations} refMode={this.state.referenceFrame} />
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />
                 {UseDateSlider && <DateSlider min={initialDate} max={maxMs} value={currentDate} onChange={this.handleDateChange} onRender={this.renderDate} />}

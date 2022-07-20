@@ -25,7 +25,7 @@ Some COSMOS satellites with orbits. Search and select interface:
 
 ![](screenshots/05.png)
 
-Beidou satellites orbits in ECI reference frame:
+Beidou satellites orbits in ECI reference frame. ECI mode can be enabled by setting UseDateSlider = true in App.js. Please note that this mode needs further testing and is not complete yet. 
 
 ![](screenshots/10.png)
 

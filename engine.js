@@ -4,10 +4,11 @@ import earthmap from './assets/earthmap-high.jpg';
 import circle from './assets/circle.png';
 import { parseTleFile as parseTleFile, getPositionFromTle } from "./tle";
 import { earthRadius } from "satellite.js/lib/constants";
-
+import * as satellite from 'satellite.js/lib/index';
 
 const SatelliteSize = 50;
-const ixpdotp = 1440 / (2.0 * 3.141592654) ;
+const MinutesPerDay = 1440;
+const ixpdotp = MinutesPerDay / (2.0 * 3.141592654) ;
 
 let TargetDate = new Date();
 
@@ -25,6 +26,7 @@ const defaultStationOptions = {
 export class Engine {
 
     stations = [];
+    referenceFrame = 1;
 
     initialize(container, options = {}) {
         this.el = container;
@@ -124,7 +126,7 @@ export class Engine {
 
         const revsPerDay = station.satrec.no * ixpdotp;
         const intervalMinutes = 1;
-        const minutes = station.orbitMinutes || 1440 / revsPerDay;
+        const minutes = station.orbitMinutes || MinutesPerDay / revsPerDay;
         const initialDate = new Date();
 
         //console.log('revsPerDay', revsPerDay, 'minutes', minutes);
@@ -138,7 +140,7 @@ export class Engine {
         for (var i = 0; i <= minutes; i += intervalMinutes) {
             const date = new Date(initialDate.getTime() + i * 60000);
 
-            const pos = getPositionFromTle(station, date);
+            const pos = getPositionFromTle(station, date, this.referenceFrame);
             if (!pos) continue;
 
             points.push(new THREE.Vector3(pos.x, pos.y, pos.z));
@@ -169,6 +171,10 @@ export class Engine {
 
     clearStationHighlight = (station) => {
         station.mesh.material = this.material;
+    }
+
+    setReferenceFrame = (type) => {
+        this.referenceFrame = type;
     }
 
     _addTleFileStations = (lteFileContent, color, stationOptions) => {
@@ -206,7 +212,7 @@ export class Engine {
     }
 
     _setupSpriteMaterials = (color) => {
-        if (this.material) return;
+        if (this.material && this.lastColor === color) return;
         
         this._satelliteSprite = new THREE.TextureLoader().load(circle, this.render);
         this.selectedMaterial = new THREE.SpriteMaterial({
@@ -223,7 +229,8 @@ export class Engine {
             map: this._satelliteSprite, 
             color: color, 
             sizeAttenuation: false
-        });            
+        });
+        this.lastColor = color;            
     }
 
     _getSatelliteSprite = (color, size) => {
@@ -238,13 +245,13 @@ export class Engine {
 
     _getSatellitePositionFromTle = (station, date) => {
         date = date || TargetDate;
-        return getPositionFromTle(station, date);
+        return getPositionFromTle(station, date, this.referenceFrame);
     }
 
     updateSatellitePosition = (station, date) => {
         date = date || TargetDate;
 
-        const pos = getPositionFromTle(station, date);
+        const pos = getPositionFromTle(station, date, this.referenceFrame);
         if (!pos) return;
 
         station.mesh.position.set(pos.x, pos.y, pos.z);
@@ -257,6 +264,16 @@ export class Engine {
         this.stations.forEach(station => {
             this.updateSatellitePosition(station, date);
         });
+
+        if (this.referenceFrame === 2) 
+            this._updateEarthRotation(date);
+        else
+            this.render();
+    }
+
+    _updateEarthRotation = (date) => {
+        const gst = satellite.gstime(date)
+        this.earthMesh.setRotationFromEuler(new THREE.Euler( 0, gst, 0));
 
         this.render();
     }
@@ -335,8 +352,8 @@ export class Engine {
             map: textLoader.load(earthmap, this.render)
         });
 
-        const earth = new THREE.Mesh(geometry, material);
-        group.add(earth);
+        this.earthMesh =  new THREE.Mesh(geometry, material);
+        group.add(this.earthMesh);        
 
         // // Axis
         // material = new THREE.LineBasicMaterial({color: 0xffffff});
