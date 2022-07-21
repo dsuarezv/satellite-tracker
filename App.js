@@ -200,7 +200,7 @@ class App extends Component {
                 <Search stations={this.state.stations} onResultClick={this.handleSearchResultClick} />
                 <SelectedStations selected={selected} onRemoveStation={this.handleRemoveSelected} onRemoveAll={this.handleRemoveAllSelected} />
                 {UseDateSlider && <DateSlider min={initialDate} max={maxMs} value={currentDate} onChange={this.handleDateChange} onRender={this.renderDate} />}
-                <div ref={c => this.el = c} style={{ width: '100%', height: '100%' }} />
+                <div ref={c => this.el = c} style={{ width: '99%', height: '99%' }} />
             </div>
         )
     }

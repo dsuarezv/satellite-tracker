@@ -133,7 +133,7 @@ h1 {
         flex-wrap: wrap;
         justify-content: flex-start;
         align-items: flex-start;
-        height: 70vh;
-        max-width: 80vw;
+        height: 60vh;
+        max-width: 70vw;
     }
 }
