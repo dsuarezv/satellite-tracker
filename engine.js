@@ -55,8 +55,8 @@ export class Engine {
     }
 
     handleWindowResize = () => {
-        const width = window.innerWidth - 1;
-        const height = window.innerHeight - 1;
+        const width = this.el.clientWidth;
+        const height = this.el.clientHeight;
 
         this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
@@ -67,8 +67,8 @@ export class Engine {
 
     handleMouseDown = (e) => {
         const mouse = new THREE.Vector2(
-            (e.clientX / window.innerWidth ) * 2 - 1,
-            -(e.clientY / window.innerHeight ) * 2 + 1 );
+            (e.clientX / this.el.clientWidth ) * 2 - 1,
+            -(e.clientY / this.el.clientHeight ) * 2 + 1 );
 
 	    this.raycaster.setFromCamera(mouse, this.camera);
 
