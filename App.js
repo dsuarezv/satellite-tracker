@@ -15,7 +15,7 @@ const DateSliderRangeInMilliseconds = 24 * 60 * 60 * 1000;  // 24 hours
 
 // Bypass CORS
 function getCorsFreeUrl(url) {
-    return 'https://api.allorigins.win/raw?url=' + url;    
+    return url;
 }
 
 class App extends Component {
